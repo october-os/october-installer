@@ -1,3 +1,3 @@
-from .arch_chroot import run
+from arch_chroot import ArchChrootExecutionError, run
 
-__all__ = ["run"]
+__all__ = ["run", "ArchChrootExecutionError"]
