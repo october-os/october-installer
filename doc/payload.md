@@ -11,7 +11,8 @@
         "takeRemaining": true
       },
       "partitionType": "[partition type]",
-      "label": "[drive label]"
+      "label": "[drive label]",
+      "mountPoint": "[dir]"
     }
   ],
   "users": [
