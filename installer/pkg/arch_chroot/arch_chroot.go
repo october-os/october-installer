@@ -5,28 +5,21 @@ import (
 	"os/exec"
 )
 
-const mount_point string = "/mnt"
+// mountPoint is the mount point of the system to chroot into
+const mountPoint string = "/mnt"
+
+// shell is the shell that will be used to execute chroot commands
 const shell string = "/bin/bash"
 
-type ArchChrootError struct {
-	StdErr string
-	Err    string
-}
-
-type PipeError struct {
-	Err string
-}
-
-func (e ArchChrootError) Error() string {
-	return e.Err
-}
-
-func (e PipeError) Error() string {
-	return e.Err
-}
-
+// Executes the command in a shell using arch-chroot.
+//
+// It executes: arch-chroot [mount_point] [shell] -c [command]
+//
+// It can return two types of errors:
+//   - PipeError: When it failed to pipe STDERR
+//   - ArchChrootError: When the command ran with arch-chroot failed.
 func Run(command string) error {
-	cmd := exec.Command("arch-chroot", mount_point, shell, "-c", command)
+	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return PipeError{Err: err.Error()}
