@@ -1,25 +1,41 @@
 package partition
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type GptPartitionType string
 
 const (
-	efi        GptPartitionType = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
-	swap       GptPartitionType = "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"
-	root       GptPartitionType = "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709"
-	fileSystem GptPartitionType = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
-	home       GptPartitionType = "933AC7E1-2EB4-4F13-B844-0E14E2AEF915"
+	GptPartitionTypeEfi        GptPartitionType = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+	GptPartitionTypeSwap       GptPartitionType = "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"
+	GptPartitionTypeRoot       GptPartitionType = "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709"
+	GptPartitionTypeFileSystem GptPartitionType = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+	GptPartitionTypeHome       GptPartitionType = "933AC7E1-2EB4-4F13-B844-0E14E2AEF915"
 )
 
-type partition struct {
+type PartitionSizeUnit string
+
+const (
+	PartitionSizeUnitKiB PartitionSizeUnit = "KiB"
+	PartitionSizeUnitMiB PartitionSizeUnit = "MiB"
+	PartitionSizeUnitGiB PartitionSizeUnit = "GiB"
+	PartitionSizeUnitTiB PartitionSizeUnit = "TiB"
+	PartitionSizeUnitPiB PartitionSizeUnit = "PiB"
+	PartitionSizeUnitEiB PartitionSizeUnit = "EiB"
+	PartitionSizeUnitZiB PartitionSizeUnit = "ZiB"
+	PartitionSizeUnitYiB PartitionSizeUnit = "YiB"
+)
+
+type Partition struct {
 	Drive         string
-	Size          partitionSize
+	Size          PartitionSize
 	PartitionType GptPartitionType
 	MountPoint    *string
 }
 
-func (p partition) ToSfdiskFormat() {
+func (p Partition) ToSfdiskFormat() string {
 	partition_string := fmt.Sprintf("uuid=%s", p.PartitionType)
 
 	if p.Size.TakeRemaining == true {
@@ -27,24 +43,37 @@ func (p partition) ToSfdiskFormat() {
 	} else {
 		partition_string += fmt.Sprintf(", size=%d%s", p.Size.Amount, *p.Size.Unit)
 	}
+	return partition_string
 }
 
-func NewPartition(drive string, size *partitionSize, partitionType GptPartitionType, mountPoint *string) *partition {
-	return &partition{
+func NewPartition(drive string, size *PartitionSize, partitionType GptPartitionType, mountPoint *string) (*Partition, error) {
+	if strings.HasPrefix(drive, "/dev/") == false {
+		return nil, NewPartitionError{
+			Err: "parameter drive is in the wrong format: should start by '/dev/'",
+		}
+	}
+
+	if strings.HasPrefix(*mountPoint, "/") == false {
+		return nil, NewPartitionError{
+			Err: "parameter mountPoint is in the wrong format: should start by '/'",
+		}
+	}
+
+	return &Partition{
 		Drive:         drive,
 		Size:          *size,
 		PartitionType: partitionType,
 		MountPoint:    mountPoint,
-	}
+	}, nil
 }
 
-type partitionSize struct {
-	Amount        *int64
+type PartitionSize struct {
+	Amount        *int
 	Unit          *string
 	TakeRemaining bool
 }
 
-func NewPartitionSize(amount *int64, unit *string, takeRemaining *bool) (*partitionSize, error) {
+func NewPartitionSize(amount *int, unit *string, takeRemaining *bool) (*PartitionSize, error) {
 	var takeRemainingValue bool
 	if takeRemaining == nil {
 		takeRemainingValue = false
@@ -58,7 +87,7 @@ func NewPartitionSize(amount *int64, unit *string, takeRemaining *bool) (*partit
 		}
 	}
 
-	return &partitionSize{
+	return &PartitionSize{
 		Amount:        amount,
 		Unit:          unit,
 		TakeRemaining: takeRemainingValue,
