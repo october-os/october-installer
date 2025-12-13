@@ -98,5 +98,13 @@ func setPassword(username, password string) error {
 }
 
 func setupSudoerFile() error {
-	// TODO: Take the correct default sudoer file from airootfs and copy it to the chrooted system
+	wheelLine := "%wheel      ALL=(ALL:ALL) ALL"
+	command := fmt.Sprintf("echo \"%s\" >> /etc/sudoers", wheelLine)
+
+	err := arch_chroot.Run(command)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
