@@ -17,13 +17,17 @@ type User struct {
 
 func New(username, password, homepath string, sudoer bool) (*User, error) {
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
-		return nil, errors.New("Can't create user with empty username or password")
+		return nil, UserInstantiationError{
+			err: errors.New("Can't create user with empty username or password"),
+		}
 	}
 
 	if strings.TrimSpace(homepath) == "" {
 		homepath = fmt.Sprintf("/home/%s", username)
 	} else if homepath[0] != '/' {
-		return nil, errors.New("Provide a valid directory for user home path")
+		return nil, UserInstantiationError{
+			err: errors.New("Provide a valid directory for user home path"),
+		}
 	}
 
 	return &User{
