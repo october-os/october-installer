@@ -1,7 +1,9 @@
 package user
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
 )
@@ -13,8 +15,21 @@ type User struct {
 	Sudoer   bool   `json:"sudoer"`
 }
 
-func New(username, password, homepath string, sudoer bool) *User {
-	// TODO: do all the checking and important stuff
+func New(username, password, homepath string, sudoer bool) (*User, error) {
+	if strings.TrimSpace(username) == "" {
+		return nil, errors.New("Can't create user with empty username")
+	}
+
+	if strings.TrimSpace(homepath) == "" {
+		homepath = fmt.Sprintf("/home/%s", username)
+	}
+
+	return &User{
+		Username: username,
+		Password: password,
+		Homepath: homepath,
+		Sudoer:   sudoer,
+	}, nil
 }
 
 func set_password(username, password string) error {
