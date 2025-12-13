@@ -21,6 +21,10 @@ func New(username, password, homepath string, sudoer bool) (*User, error) {
 	}
 
 	if strings.TrimSpace(homepath) == "" {
+		if homepath[0] != '/' {
+			return nil, errors.New("Provide a valid directory for user home path")
+		}
+
 		homepath = fmt.Sprintf("/home/%s", username)
 	}
 
@@ -32,8 +36,25 @@ func New(username, password, homepath string, sudoer bool) (*User, error) {
 	}, nil
 }
 
-func CreateUser(user User) {
-	// TODO: Make high level function that calls other functions to create the user
+func CreateUser(user User) error {
+	err := userAdd(user.Username, user.Homepath)
+	if err != nil {
+		return err
+	}
+
+	err = setPassword(user.Username, user.Password)
+	if err != nil {
+		return err
+	}
+
+	if user.Sudoer {
+		err = addToSudoer(user.Username)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func addToSudoer(username string) error {
