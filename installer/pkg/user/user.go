@@ -25,18 +25,18 @@ type User struct {
 //
 // Will either return:
 //   - *User
-//   - UserInstantiationError: When an incorrect value is passed
+//   - NewUserError: When an incorrect value is passed
 func New(username, password, homepath string, sudoer bool) (*User, error) {
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
-		return nil, UserInstantiationError{
+		return nil, NewUserError{
 			err: errors.New("Can't create user with empty username or password"),
 		}
 	}
 
 	if strings.TrimSpace(homepath) == "" {
 		homepath = fmt.Sprintf("/home/%s", username)
-	} else if homepath[0] != '/' {
-		return nil, UserInstantiationError{
+	} else if strings.HasPrefix(homepath, "/") {
+		return nil, NewUserError{
 			err: errors.New("Provide a valid directory for user home path"),
 		}
 	}
