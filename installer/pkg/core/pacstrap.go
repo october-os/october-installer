@@ -10,7 +10,7 @@ const BASE_ARCH string = "base"
 const BASE_LINUX_FIRMWARE string = "linux-firmware"
 
 func InstallBasicInstallation() error {
-	cpuMicrocode, err := GettCpuMicroCode()
+	cpuMicrocode, err := gettCpuMicroCode()
 	if err != nil {
 		return CoreInstallError{
 			Err: err,

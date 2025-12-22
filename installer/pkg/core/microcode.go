@@ -12,7 +12,7 @@ const INTEL_ID string = "GenuineIntel"
 const AMD_MICROCODE string = "amd-ucode"
 const INTEL_MICROCODE string = "intel-ucode"
 
-func GettCpuMicroCode() (string, error) {
+func gettCpuMicroCode() (string, error) {
 	cmd := exec.Command("/bin/bash", "-c", "cat /proc/cpuinfo | grep 'vendor_id'")
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
