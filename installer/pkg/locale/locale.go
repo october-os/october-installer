@@ -58,15 +58,14 @@ func doesLocaleExist(locale string, allLocales []string) (bool, int) {
 }
 
 func saveLocaleGen(content []string) error {
-	f, err := os.Open(FILEPATH)
-	if err != nil {
+	if err := arch_chroot.Run("rm /etc/locale.gen"); err != nil {
 		return err
 	}
 
-	defer f.Close()
-
 	for _, line := range content {
-		if _, err := f.WriteString(line); err != nil {
+		fmt.Println(line)
+		command := fmt.Sprintf("echo \"%s\" >> /etc/locale.gen", line)
+		if err := arch_chroot.Run(command); err != nil {
 			return err
 		}
 	}
@@ -85,7 +84,7 @@ func loadLocaleGen() ([]string, error) {
 	var fileContent []string
 
 	for scanner.Scan() {
-		line := scanner.Text() + "\n"
+		line := scanner.Text()
 		fileContent = append(fileContent, line)
 	}
 
