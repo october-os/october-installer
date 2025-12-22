@@ -17,7 +17,7 @@ const _FILEPATH string = "/mnt/etc/locale.gen"
 // sets up the locales.
 //
 // The given locale must be in UTF-8 and in the same
-// format as it is inside /etc/locale.gen.
+// format as it is inside /etc/locale.gen before the space.
 //
 // Can return error types:
 //   - LocaleGenError

@@ -14,7 +14,7 @@ const _INTEL_ID string = "GenuineIntel"
 const _AMD_MICROCODE string = "amd-ucode"
 const _INTEL_MICROCODE string = "intel-ucode"
 
-// Checks the CPUs come from which vendor and returns the
+// Checks the vendor_id of all CPUs and returns the
 // corresponding microcode package that has to be installed.
 //
 // It gets the vendor id by executing:
