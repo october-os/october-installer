@@ -6,12 +6,20 @@ import (
 	"strings"
 )
 
+// vendor_id field values inside /proc/cpuinfo
 const _AMD_ID string = "AuthenticAMD"
 const _INTEL_ID string = "GenuineIntel"
 
+// microcode packages name
 const _AMD_MICROCODE string = "amd-ucode"
 const _INTEL_MICROCODE string = "intel-ucode"
 
+// Checks the CPUs come from which vendor and returns the
+// corresponding microcode package that has to be installed.
+//
+// It gets the vendor id by executing:
+//
+//	cat /proc/cpuinfo | grep 'vendor_id'
 func getCpuMicroCode() (string, error) {
 	cmd := exec.Command("/bin/bash", "-c", "cat /proc/cpuinfo | grep 'vendor_id'")
 	stdoutPipe, err := cmd.StdoutPipe()

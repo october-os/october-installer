@@ -5,10 +5,17 @@ import (
 	"os/exec"
 )
 
+// Basic Arch Linux install packages names
 const _LINUX_KERNEL string = "linux"
 const _BASE_ARCH string = "base"
 const _BASE_LINUX_FIRMWARE string = "linux-firmware"
 
+// Installs a basic Arch Linux installation on the drive
+// mounted on /mnt using pacstrap. Detects and installs the CPU
+// microcode for the current CPU too.
+//
+// Can return errors of type:
+//   - CoreInstallError
 func InstallBasicInstallation() error {
 	cpuMicrocode, err := getCpuMicroCode()
 	if err != nil {
