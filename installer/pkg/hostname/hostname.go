@@ -17,11 +17,7 @@ func SetHostname(hostname string) error {
 
 	command := fmt.Sprintf("echo %s > /etc/hostname", hostname)
 
-	if err := arch_chroot.Run(command); err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(command)
 }
 
 func isRFC1178Complient(hostname string) bool {

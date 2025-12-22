@@ -5,9 +5,9 @@ import (
 	"os/exec"
 )
 
-const LINUX_KERNEL string = "linux"
-const BASE_ARCH string = "base"
-const BASE_LINUX_FIRMWARE string = "linux-firmware"
+const _LINUX_KERNEL string = "linux"
+const _BASE_ARCH string = "base"
+const _BASE_LINUX_FIRMWARE string = "linux-firmware"
 
 func InstallBasicInstallation() error {
 	cpuMicrocode, err := getCpuMicroCode()
@@ -21,7 +21,7 @@ func InstallBasicInstallation() error {
 		}
 	}
 
-	cmd := exec.Command("pacstrap", "-K", "/mnt", BASE_ARCH, LINUX_KERNEL, BASE_LINUX_FIRMWARE, cpuMicrocode)
+	cmd := exec.Command("pacstrap", "-K", "/mnt", _BASE_ARCH, _LINUX_KERNEL, _BASE_LINUX_FIRMWARE, cpuMicrocode)
 
 	if err := cmd.Run(); err != nil {
 		return CoreInstallError{

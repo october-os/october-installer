@@ -10,7 +10,7 @@ import (
 	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
 )
 
-const FILEPATH string = "/mnt/etc/locale.gen"
+const _FILEPATH string = "/mnt/etc/locale.gen"
 
 func GenerateLocales(locale string) error {
 	locales, err := loadLocaleGen()
@@ -40,11 +40,7 @@ func GenerateLocales(locale string) error {
 		}
 	}
 
-	if err := arch_chroot.Run("locale-gen"); err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run("locale-gen")
 }
 
 func doesLocaleExist(locale string, allLocales []string) (bool, int) {
@@ -70,7 +66,7 @@ func saveLocaleGen(content []string) error {
 }
 
 func loadLocaleGen() ([]string, error) {
-	f, err := os.Open(FILEPATH)
+	f, err := os.Open(_FILEPATH)
 	if err != nil {
 		return nil, err
 	}

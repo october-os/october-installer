@@ -23,20 +23,12 @@ func SetTime(timezone string) error {
 	}
 
 	command := fmt.Sprintf("ln -sf /usr/share/zoneinfo/%s /etc/localtime", timezone)
-	if err := arch_chroot.Run(command); err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(command)
 }
 
 func SetHwClock() error {
 	command := "hwclock --systohc"
-	if err := arch_chroot.Run(command); err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(command)
 }
 
 func isTimezoneValid(timezone string) (bool, error) {
