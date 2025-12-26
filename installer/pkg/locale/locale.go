@@ -11,7 +11,7 @@ import (
 )
 
 // Absolute file path to locale.gen
-const _FILEPATH string = "/mnt/etc/locale.gen"
+const filepath string = "/mnt/etc/locale.gen"
 
 // Checks if the given locale exist, then uncomment its and
 // sets up the locales.
@@ -90,7 +90,7 @@ func saveLocaleGen(content []string) error {
 // Reads the content of /etc/locale.gen then
 // returns an array of all the lines inside the files.
 func loadLocaleGen() ([]string, error) {
-	f, err := os.Open(_FILEPATH)
+	f, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
 	}
