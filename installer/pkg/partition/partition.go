@@ -22,7 +22,7 @@ import (
 // A partition's formatting failed
 // or
 // A partition's mounting failed
-func SetupPartitions(drives []*Drive) error {
+func SetupPartitions(drives []Drive) error {
 	if err := checkCompatibility(drives); err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func SetupPartitions(drives []*Drive) error {
 // stdout couldn't be read
 // or
 // a drive is not compatible
-func checkCompatibility(drives []*Drive) error {
+func checkCompatibility(drives []Drive) error {
 	for _, drive := range drives {
 		cmd := exec.Command("lsblk", drive.Path, "-dno", "pttype")
 		stdout, err := cmd.StdoutPipe()
@@ -114,7 +114,7 @@ func checkCompatibility(drives []*Drive) error {
 //     stderr couldn't be piped
 //     or
 //     getting drive's states using sfdisk
-func createPartitions(drives []*Drive) ([]map[Partition]SfdiskJsonPartition, error) {
+func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, error) {
 	partitioningFiles, err := createPartitioningFiles(drives)
 	if err != nil {
 		return nil, err
@@ -185,11 +185,11 @@ func createPartitions(drives []*Drive) ([]map[Partition]SfdiskJsonPartition, err
 //     when a file couldn't be created
 //     or
 //     when a file couldn't be modified
-func createPartitioningFiles(drives []*Drive) (map[*Drive]string, error) {
+func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 	drivePartitionsFiles := make(map[*Drive]string)
 	for _, drive := range drives {
 		fileName := strings.ReplaceAll(drive.Path, "/", "")
-		drivePartitionsFiles[drive] = fileName
+		drivePartitionsFiles[&drive] = fileName
 
 		file, err := os.Create(fileName)
 		if err != nil {
