@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
+	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 // Absolute file path to locale.gen

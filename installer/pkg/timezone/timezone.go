@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
+	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 // Checks if the timezone exist then sets it up inside

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
+	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 // Checks the validity and Sets the network hostname

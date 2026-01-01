@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
+	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 // User represents a user that needs to be created.

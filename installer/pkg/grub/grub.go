@@ -3,7 +3,7 @@ package grub
 import (
 	"fmt"
 
-	"github.com/arch-couple/arch-couple-installer/pkg/arch_chroot"
+	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 const espMountPoint string = "/boot"
