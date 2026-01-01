@@ -77,14 +77,14 @@ func (d *Drive) Validate() error {
 
 // Partition represents a drive/disk partition that needs to be created
 // Possible attributes values:
-// - FileSystem: A file system present in the supportedFileSystems slice above, or nil
+// - FileSystem: A file system present in the supportedFileSystems slice above, or default string value
 // - PartitionType: a GPT partition type present in the supportedGptPartitionTypes slice above
-// - MountPoint: an absolute Linux filesystem path, or nil
+// - MountPoint: an absolute Linux filesystem path, or string default value
 type Partition struct {
 	Size          PartitionSize `json:"size"`
-	FileSystem    *string       `json:"fileSystem"`
+	FileSystem    string        `json:"fileSystem"`
 	PartitionType string        `json:"partitionType"`
-	MountPoint    *string       `json:"mountPoint"`
+	MountPoint    string        `json:"mountPoint"`
 }
 
 // Transforms a partition into its sfdisk format
@@ -94,10 +94,10 @@ type Partition struct {
 // "type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=1GiB"
 func (p *Partition) toSfdiskFormat() string {
 	partition_string := fmt.Sprintf("type=%s", p.PartitionType)
-	if *p.Size.TakeRemaining {
+	if p.Size.TakeRemaining {
 		partition_string += ", size=+"
 	} else {
-		partition_string += fmt.Sprintf(", size=%d%s", *p.Size.Amount, *p.Size.Unit)
+		partition_string += fmt.Sprintf(", size=%d%s", p.Size.Amount, p.Size.Unit)
 	}
 	return partition_string
 }
@@ -105,8 +105,8 @@ func (p *Partition) toSfdiskFormat() string {
 // Validates the attributes of a Partition struct
 // Returns a ValidationError if validation fails
 func (p *Partition) Validate() error {
-	if p.MountPoint != nil {
-		if !strings.HasPrefix(*p.MountPoint, "/") {
+	if p.MountPoint != "" {
+		if !strings.HasPrefix(p.MountPoint, "/") {
 			return &ValidationError{
 				Err: errors.New("Partition validation: error=MountPoint is in the wrong format: should start by '/'"),
 			}
@@ -117,26 +117,26 @@ func (p *Partition) Validate() error {
 			Err: errors.New("Partition validation: error=specified PartitionType is not supported"),
 		}
 	}
-	if p.FileSystem != nil {
-		if !slices.Contains(supportedFileSystems, *p.FileSystem) {
+	if p.FileSystem != "" {
+		if !slices.Contains(supportedFileSystems, p.FileSystem) {
 			return &ValidationError{
 				Err: errors.New("Partition validation: error=specified FileSystem is not supported"),
 			}
 		}
 	}
 
-	if p.FileSystem == nil {
+	if p.FileSystem == "" {
 		if p.PartitionType != gptPartitionTypeEfi && p.PartitionType != gptPartitionTypeSwap {
 			return &ValidationError{
-				Err: errors.New("Partition validation: error=Filesystem is nil, but the partition type needs a file system"),
+				Err: errors.New("Partition validation: error=Filesystem is not defined, but the partition type needs a file system"),
 			}
 		}
 	}
 
-	if p.MountPoint == nil {
+	if p.MountPoint == "" {
 		if p.PartitionType == gptPartitionTypeEfi || p.PartitionType == gptPartitionTypeSwap || p.PartitionType == gptPartitionTypeRoot {
 			return &ValidationError{
-				Err: errors.New("Partition validation: error=MountPoint is nil, but the partition type needs a mount point"),
+				Err: errors.New("Partition validation: error=MountPoint is not defined, but the partition type needs a mount point"),
 			}
 		}
 	}
@@ -146,40 +146,34 @@ func (p *Partition) Validate() error {
 
 // PartitionSize represents the size of a Partition
 // Possible attributes values:
-// Amount: any positive integer greater or equal 1, or nil
-// Unit: a partition size unit present in the supportedPartitionSizeUnits slice above, or nil
-// TakeRemaining: true/false/nil, if false/nil: Amount and Unit must not be nil
+// Amount: any positive integer greater or equal 1, or int default value
+// Unit: a partition size unit present in the supportedPartitionSizeUnits slice above, or string default value
+// TakeRemaining: true/false, if false: Amount and Unit must not be default int/string values
 type PartitionSize struct {
-	Amount        *int    `json:"amount"`
-	Unit          *string `json:"unit"`
-	TakeRemaining *bool   `json:"takeRemaining"`
+	Amount        int    `json:"amount"`
+	Unit          string `json:"unit"`
+	TakeRemaining bool   `json:"takeRemaining"`
 }
 
 // Validates the attributes of a PartitionSize struct
 // Returns a ValidationError if validation fails
 func (p *PartitionSize) Validate() error {
-	var takeRemainingValue bool
-	if p.TakeRemaining == nil {
-		takeRemainingValue = false
-		p.TakeRemaining = &takeRemainingValue
-	}
-
-	if *p.TakeRemaining == false && (p.Amount == nil || p.Unit == nil) {
+	if p.TakeRemaining == false && (p.Amount == 0 || p.Unit == "") {
 		return &ValidationError{
-			Err: errors.New("PartitionSize validation: error=TakeRemaining is false but Amount and/or Unit are nil"),
+			Err: errors.New("PartitionSize validation: error=TakeRemaining is false but Amount and/or Unit are not defined"),
 		}
 	}
 
-	if p.Amount != nil {
-		if *p.Amount < 1 {
+	if p.Amount != 0 {
+		if p.Amount < 1 {
 			return &ValidationError{
 				Err: errors.New("PartitionSize validation: error=Amount must be greater or equal 1"),
 			}
 		}
 	}
 
-	if p.Unit != nil {
-		if !slices.Contains(supportedPartitionSizeUnits, *p.Unit) {
+	if p.Unit != "" {
+		if !slices.Contains(supportedPartitionSizeUnits, p.Unit) {
 			return &ValidationError{
 				Err: errors.New("PartitionSize validation: error=specified Unit is not supported"),
 			}

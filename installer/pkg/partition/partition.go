@@ -8,49 +8,112 @@ import (
 	"strings"
 )
 
-// Creates one file per drive containing its partitions in sfdisk named-fields syntax
-// from a list of Drives
-// Returns a map of the drives names and their files name
-// Can also return one type of error:
-//   - CreatePartitionsError:
-//     when a file couldn't be created
-//     or
-//     when a file couldn't be modified
-func createPartitioningFiles(drives []*Drive) (map[*Drive]string, error) {
-	drivePartitionsFiles := make(map[*Drive]string)
-	for _, drive := range drives {
-		fileName := strings.ReplaceAll(drive.Path, "/", "")
-		fullFilename := fmt.Sprintf("%s.txt", fileName)
-		drivePartitionsFiles[drive] = fullFilename
+// Sets up the partitions for a list of Drive:
+// 1. Checks compatibility
+// 2. Creates the partitions
+// 3. Formats and mounts each partition
+//
+// Can return one type of error: SetupPartitionsError
+// if:
+// The compatibility check failed/found an incompatibility
+// or
+// The partitions creation failed
+// or
+// A partition's formatting failed
+// or
+// A partition's mounting failed
+func SetupPartitions(drives []*Drive) error {
+	if err := checkCompatibility(drives); err != nil {
+		return err
+	}
+	newPartitionsMappings, err := createPartitions(drives)
+	if err != nil {
+		return err
+	}
 
-		file, err := os.Create(fullFilename)
-		if err != nil {
-			return nil, &SetupPartitionsError{
-				Err: fmt.Errorf("could not create file '%s' for '%s' drive partitioning: error=%s", fullFilename, drive.Path, err.Error()),
+	for _, mapping := range newPartitionsMappings {
+		for partition, sfdiskPartition := range mapping {
+			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
+				return err
 			}
-		}
-		defer file.Close()
-
-		for _, partition := range drive.Partitions {
-			partitionEntry := fmt.Sprintf("%s\n", partition.toSfdiskFormat())
-			_, err := file.WriteString(partitionEntry)
-			if err != nil {
-				return nil, &SetupPartitionsError{
-					Err: fmt.Errorf("could not edit file '%s' for partitioning: error=%s", fullFilename, err.Error()),
-				}
+			if err = mountPartition(partition, sfdiskPartition.Node); err != nil {
+				return err
 			}
 		}
 	}
-	return drivePartitionsFiles, nil
+
+	return nil
+}
+
+// Checks the compatibility of a list of Drives
+// A drive needs the GPT partition table to be compatible
+//
+// Can return one type of error: SetupPartitionsError
+// if:
+// stdout couldn't be piped
+// or
+// stderr couldn't be piped
+// or
+// the partition table type couldn't be fetched using lsblk
+// or
+// stdout couldn't be read
+// or
+// a drive is not compatible
+func checkCompatibility(drives []*Drive) error {
+	for _, drive := range drives {
+		cmd := exec.Command("lsblk", drive.Path, "-dno", "pttype")
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return &SetupPartitionsError{
+				Err: fmt.Errorf("error piping stdout: error=%s", err.Error()),
+			}
+		}
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return &SetupPartitionsError{
+				Err: fmt.Errorf("error piping stderr: error=%s", err.Error()),
+			}
+		}
+		if err := cmd.Start(); err != nil {
+			stderrOutput, _ := io.ReadAll(stderr)
+			return &SetupPartitionsError{
+				Err: fmt.Errorf("error getting partition table type for drive '%s': error=%s", drive.Path, string(stderrOutput)),
+			}
+		}
+		var stdoutOutput []byte
+		if stdoutOutput, err = io.ReadAll(stdout); err != nil {
+			return &SetupPartitionsError{
+				Err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
+			}
+		}
+		if err := cmd.Wait(); err != nil {
+			return &SetupPartitionsError{
+				Err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
+			}
+		}
+		if string(stdoutOutput) != "gpt\n" {
+			return &SetupPartitionsError{
+				Err: fmt.Errorf("drive '%s' is not compatible: partition table must be GPT", drive.Path),
+			}
+		}
+	}
+	return nil
 }
 
 // Create Partitions from a list of Drives using sfdisk
 //
-// Can also return one type of error:
-//   - CreatePartitionsError:
+// Returns a mapping of the Partition and its corresponding SfdiskJsonPartition
+// to map the Partition object to the partition created on the system
+//
+// Can return one type of error:
+//   - SetupPartitionsError:
+//     when the creation of partitioning files failed
+//     or
 //     when the creation of partitions failed using sfdisk
 //     or
 //     stderr couldn't be piped
+//     or
+//     getting drive's states using sfdisk
 func createPartitions(drives []*Drive) ([]map[Partition]SfdiskJsonPartition, error) {
 	partitioningFiles, err := createPartitioningFiles(drives)
 	if err != nil {
@@ -114,27 +177,49 @@ func createPartitions(drives []*Drive) ([]map[Partition]SfdiskJsonPartition, err
 	return mappings, nil
 }
 
-func SetupPartitions(drives []*Drive) error {
-	newPartitionsMappings, err := createPartitions(drives)
-	if err != nil {
-		return err
-	}
+// Creates one file per drive containing its partitions in sfdisk named-fields syntax
+// from a list of Drives
+// Returns a map of the drives and their files name
+// Can return one type of error:
+//   - SetupPartitionsError:
+//     when a file couldn't be created
+//     or
+//     when a file couldn't be modified
+func createPartitioningFiles(drives []*Drive) (map[*Drive]string, error) {
+	drivePartitionsFiles := make(map[*Drive]string)
+	for _, drive := range drives {
+		fileName := strings.ReplaceAll(drive.Path, "/", "")
+		drivePartitionsFiles[drive] = fileName
 
-	for _, mapping := range newPartitionsMappings {
-		for partition, sfdiskPartition := range mapping {
-			if err = formatPartition(&partition, sfdiskPartition.Node); err != nil {
-				return err
+		file, err := os.Create(fileName)
+		if err != nil {
+			return nil, &SetupPartitionsError{
+				Err: fmt.Errorf("could not create file '%s' for '%s' drive partitioning: error=%s", fileName, drive.Path, err.Error()),
 			}
-			if err = mountPartition(&partition, sfdiskPartition.Node); err != nil {
-				return err
+		}
+		defer file.Close()
+
+		for _, partition := range drive.Partitions {
+			partitionEntry := fmt.Sprintf("%s\n", partition.toSfdiskFormat())
+			_, err := file.WriteString(partitionEntry)
+			if err != nil {
+				return nil, &SetupPartitionsError{
+					Err: fmt.Errorf("could not edit file '%s' for partitioning: error=%s", fileName, err.Error()),
+				}
 			}
 		}
 	}
-
-	return nil
+	return drivePartitionsFiles, nil
 }
 
-func formatPartition(partition *Partition, path string) error {
+// Formats a partition according to its settings
+//
+// Can return one type of error: SetupPartitionsError
+// if:
+// cmd is nil; a command couldn't be formed
+// or
+// the formatting failed
+func formatPartition(partition Partition, path string) error {
 	var cmd *exec.Cmd
 	switch partition.PartitionType {
 	case gptPartitionTypeEfi:
@@ -142,7 +227,7 @@ func formatPartition(partition *Partition, path string) error {
 	case gptPartitionTypeSwap:
 		cmd = exec.Command("mkswap", path)
 	case gptPartitionTypeRoot, gptPartitionTypeHome, gptPartitionTypeFileSystem:
-		switch *partition.FileSystem {
+		switch partition.FileSystem {
 		case fileSystemExt4:
 			cmd = exec.Command("mkfs.ext4", path)
 		case fileSystemBtrfs:
@@ -152,7 +237,7 @@ func formatPartition(partition *Partition, path string) error {
 
 	if cmd == nil {
 		return &SetupPartitionsError{
-			Err: fmt.Errorf("error formatting partition '%s'", path),
+			Err: fmt.Errorf("error formatting partition '%s': cmd is nil", path),
 		}
 	}
 
@@ -165,7 +250,14 @@ func formatPartition(partition *Partition, path string) error {
 	return nil
 }
 
-func mountPartition(partition *Partition, path string) error {
+// Mounts a partition according to its settings
+//
+// Can return one type of error: SetupPartitionsError
+// if:
+// cmd is nil; a command couldn't be formed
+// or
+// the mounting failed
+func mountPartition(partition Partition, path string) error {
 	var cmd *exec.Cmd
 	switch partition.PartitionType {
 	case gptPartitionTypeEfi:
@@ -175,7 +267,7 @@ func mountPartition(partition *Partition, path string) error {
 	case gptPartitionTypeRoot:
 		cmd = exec.Command("mount", path, "/mnt")
 	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
-		cmd = exec.Command("mount", "--mkdir", path, *partition.MountPoint)
+		cmd = exec.Command("mount", "--mkdir", path, partition.MountPoint)
 	}
 
 	if cmd == nil {
