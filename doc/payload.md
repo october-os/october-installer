@@ -2,17 +2,22 @@
 
 ```json
 {
-  "partitions": [
+  "drives" : [
     {
-      "drive": "[path to drive]",
-      "size": {
-        "size": 1234,
-        "unit": "[unit]",
-        "takeRemaining": true
-      },
-      "partitionType": "[partition type]",
-      "label": "[drive label]",
-      "mountPoint": "[dir]"
+      "path": "/dev/xyz",
+      "append": true/false,
+      "partitions": [
+        {
+          "size": {
+            "amount": 1234,
+            "unit": "MiB/GiB/etc.",
+            "takeRemaining": true/false,
+          },
+          "fileSystem": "btrfs/ext4",
+          "partitionType": "gpt partition type (guid)",
+          "mountPoint": "/absolute/path/to/directory",
+        }
+      ],
     }
   ],
   "users": [
@@ -26,6 +31,6 @@
   "timezone": "[user timezone]",
   "locale": "[user locale]",
   "hostname": "[user hostname]",
-  "rootpassword": "[root password]"
+  "rootpassword": "[root password]",
 }
 ```
