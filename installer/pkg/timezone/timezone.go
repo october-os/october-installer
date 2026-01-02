@@ -39,7 +39,7 @@ func SetHwClock() error {
 //
 // Can return error types:
 //   - TimezoneError
-func IsTimezoneValid(timezone string) (bool, error) {
+func ValidateTimezone(timezone string) (bool, error) {
 	timezones, err := getAllTimezones()
 	if err != nil {
 		return false, TimezoneError{

@@ -1,108 +1,66 @@
 package locale
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"os"
+	"io"
+	"os/exec"
 	"strings"
 
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 // Absolute file path to locale.gen
-const filepath string = "/mnt/etc/locale.gen"
+const filepath string = "/etc/locale.gen"
 
-// Checks if the given locale exist, then uncomment its and
-// sets up the locales.
+// Uncomment and sets up the locales.
 //
 // The given locale must be in UTF-8 and in the same
 // format as it is inside /etc/locale.gen before the space.
 //
 // Can return error types:
-//   - LocaleGenError
 //   - PipeError
 //   - ArchChrootError
 func GenerateLocales(locale string) error {
-	locales, err := loadLocaleGen()
-	if err != nil {
-		return LocaleGenError{
-			Err: err,
-		}
-	}
+	sedCmd := fmt.Sprintf("sed -i 's/#%s UTF-8/%s UTF-8/' %s", locale, locale, filepath)
+	localeConfCmd := fmt.Sprintf("echo LANG=%s > /etc/locale.conf", locale)
+	localegenCmd := "locale-gen"
 
-	if exists, index := doesLocaleExist(locale, locales); exists {
-		locales[index] = strings.TrimLeft(locales[index], "#")
-		splitedLocale := strings.Split(locales[index], " ")
-
-		command := fmt.Sprintf("echo LANG=%s > /etc/locale.conf", splitedLocale[0])
-		if err := arch_chroot.Run(command); err != nil {
-			return err
-		}
-	} else {
-		return LocaleGenError{
-			Err: errors.New("Invalid locale"),
-		}
-	}
-
-	if err := saveLocaleGen(locales); err != nil {
-		return LocaleGenError{
-			Err: err,
-		}
-	}
-
-	return arch_chroot.Run("locale-gen")
+	command := fmt.Sprintf("%s && %s && %s", sedCmd, localeConfCmd, localegenCmd)
+	return arch_chroot.Run(command)
 }
 
 // Checks if the given UTF-8 locale exist insides /etc/locale.gen.
 //
-// It returns if the locale was found and its index
-// inside the array.
-func doesLocaleExist(locale string, allLocales []string) (bool, int) {
-	for i, line := range allLocales {
-		splittedString := strings.Split(line, " ")
-		if splittedString[0] == "#"+locale && splittedString[1] == "UTF-8" {
-			return true, i
+// Can return error types:
+//   - LocaleGenError
+func ValidateLocale(locale string) (bool, error) {
+	command := fmt.Sprintf("cat %s | grep %s", filepath, locale)
+	cmd := exec.Command("/bin/bash", "-c", command)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return false, LocaleGenError{
+			Err: err,
 		}
 	}
 
-	return false, 0
-}
-
-// Saves the updated content inside /etc/locale.gen using
-// arch-chroot.
-//
-// Updates the file by doing:
-//
-//	cat > /etc/locale.gen << EOF\n[content]EOF
-func saveLocaleGen(content []string) error {
-	var contentStr strings.Builder
-	for _, line := range content {
-		contentStr.WriteString(line)
-		contentStr.WriteString("\n")
+	if err := cmd.Start(); err != nil {
+		return false, LocaleGenError{
+			Err: err,
+		}
 	}
 
-	command := fmt.Sprintf("cat > /etc/locale.gen << EOF\n%sEOF", contentStr.String())
-
-	return arch_chroot.Run(command)
-}
-
-// Reads the content of /etc/locale.gen then
-// returns an array of all the lines inside the files.
-func loadLocaleGen() ([]string, error) {
-	f, err := os.Open(filepath)
+	stdoutBytes, err := io.ReadAll(stdout)
 	if err != nil {
-		return nil, err
+		return false, LocaleGenError{
+			Err: err,
+		}
 	}
 
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-	var fileContent []string
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		fileContent = append(fileContent, line)
+	if err := cmd.Wait(); err != nil {
+		return false, LocaleGenError{
+			Err: err,
+		}
 	}
 
-	return fileContent, nil
+	return strings.Contains(string(stdoutBytes), locale+" UTF-8"), nil
 }
