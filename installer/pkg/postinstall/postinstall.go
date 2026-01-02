@@ -1,6 +1,6 @@
 package postinstall
 
-func DownloadPostInstallPackages() error {
+func InstallPostInstallPackages() error {
 	packages, err := getPackageList(packageFilePath)
 	if err != nil {
 		return PostInstallError{
@@ -8,22 +8,10 @@ func DownloadPostInstallPackages() error {
 		}
 	}
 
-	if err := downloadAllPackages(packages, false); err != nil {
-		return PostInstallError{
-			err: err,
-		}
-	}
-
-	if err := installAurHelperAndPackages(); err != nil {
-		return PostInstallError{
-			err: err,
-		}
-	}
-
-	return nil
+	return downloadAllPackages(packages, false)
 }
 
-func installAurHelperAndPackages() error {
+func InstallAurHelperAndPackages() error {
 	if err := activateBuilderAccount(); err != nil {
 		return err
 	}
@@ -34,12 +22,14 @@ func installAurHelperAndPackages() error {
 
 	packages, err := getPackageList(aurFilePath)
 	if err != nil {
-		return err
+		return PostInstallError{
+			err: err,
+		}
 	}
 
 	if err := downloadAllPackages(packages, true); err != nil {
 		return err
 	}
 
-	return deletingBuilderAccount()
+	return deleteBuilderAccount()
 }

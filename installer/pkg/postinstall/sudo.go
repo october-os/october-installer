@@ -22,7 +22,7 @@ func activateBuilderAccount() error {
 	return arch_chroot.Run(command)
 }
 
-func deletingBuilderAccount() error {
+func deleteBuilderAccount() error {
 	deleteSudoFile := fmt.Sprintf("rm %s", sudoerFilePath)
 	deleteUser := fmt.Sprintf("userdel -r %s", username)
 
