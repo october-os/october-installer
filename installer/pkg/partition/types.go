@@ -73,6 +73,11 @@ func (d *Drive) Validate() error {
 			Err: errors.New("Drive validation: error=Path is in the wrong format: should start by '/dev/'"),
 		}
 	}
+	for _, partition := range d.Partitions {
+		if err := partition.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -181,6 +186,10 @@ func (p *Partition) Validate() error {
 				Err: errors.New("Partition validation: error=MountPoint is not defined, but the partition type needs a mount point"),
 			}
 		}
+	}
+
+	if err := p.Size.Validate(); err != nil {
+		return err
 	}
 
 	return nil
