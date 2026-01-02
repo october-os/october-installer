@@ -5,21 +5,21 @@
   "drives" : [
     {
       "path": "/dev/xyz",
-      "append": true/false
+      "append": true/false,
       "partitions": [
         {
           "size": {
             "amount": 1234,
             "unit": "MiB/GiB/etc.",
-            "takeRemaining": true/false
+            "takeRemaining": true/false,
           },
-          "fileSystem": "btrfs/ext4"
+          "fileSystem": "btrfs/ext4",
           "partitionType": "gpt partition type (guid)",
-          "mountPoint": "/absolute/path/to/directory"
+          "mountPoint": "/absolute/path/to/directory",
         }
       ],
     }
-  ]
+  ],
   "users": [
     {
       "username": "[username]",
@@ -31,6 +31,6 @@
   "timezone": "[user timezone]",
   "locale": "[user locale]",
   "hostname": "[user hostname]",
-  "rootpassword": "[root password]"
+  "rootpassword": "[root password]",
 }
 ```

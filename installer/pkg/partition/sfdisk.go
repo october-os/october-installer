@@ -26,19 +26,8 @@ type SfdiskJsonPartition struct {
 // Gets a drive's state using 'sfdisk --json <device>'
 // Useful to compare the state before and after creating partitions
 //
-// # Decodes the JSON state into a SfdiskJsonDrive object and returns it
-//
+// Decodes the JSON state into a SfdiskJsonDrive object and returns it
 // Can return one type of error: SetupPartitionsError
-// if:
-// stdout couldn't be piped
-// or
-// stderr couldn't be piped
-// or
-// the state couldn't be fetched using sfdisk
-// or
-// stdout couldn't be read
-// or
-// JSON decoding failed
 func getDriveStateWithSfdisk(drive string) (*SfdiskJsonDrive, error) {
 	cmd := exec.Command("sfdisk", "--json", drive)
 	stdout, err := cmd.StdoutPipe()

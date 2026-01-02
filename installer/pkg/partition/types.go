@@ -3,6 +3,7 @@ package partition
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 	"slices"
 	"strings"
 )
@@ -100,6 +101,47 @@ func (p *Partition) toSfdiskFormat() string {
 		partition_string += fmt.Sprintf(", size=%d%s", p.Size.Amount, p.Size.Unit)
 	}
 	return partition_string
+}
+
+// Returns the command that can be used to format the partition
+// Can return one type of error: SetupPartitionsError
+func (p *Partition) formatCommand(path string) (*exec.Cmd, error) {
+	switch p.PartitionType {
+	case gptPartitionTypeEfi:
+		return exec.Command("mkfs.fat", "-F", "32", path), nil
+	case gptPartitionTypeSwap:
+		return exec.Command("mkswap", path), nil
+	case gptPartitionTypeRoot, gptPartitionTypeHome, gptPartitionTypeFileSystem:
+		switch p.FileSystem {
+		case fileSystemExt4:
+			return exec.Command("mkfs.ext4", path), nil
+		case fileSystemBtrfs:
+			return exec.Command("mkfs.btrfs", path), nil
+		}
+	}
+
+	return nil, &SetupPartitionsError{
+		Err: fmt.Errorf("error choosing a formatting command: unsupported file system or partition type"),
+	}
+}
+
+// Returns the command that can be used to mount the partition
+// Can return one type of error: SetupPartitionsError
+func (p *Partition) mountCommand(path string) (*exec.Cmd, error) {
+	switch p.PartitionType {
+	case gptPartitionTypeEfi:
+		return exec.Command("mount", "--mkdir", path, "/mnt/boot"), nil
+	case gptPartitionTypeSwap:
+		return exec.Command("swapon", path), nil
+	case gptPartitionTypeRoot:
+		return exec.Command("mount", path, "/mnt"), nil
+	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
+		return exec.Command("mount", "--mkdir", path, p.MountPoint), nil
+	}
+
+	return nil, &SetupPartitionsError{
+		Err: fmt.Errorf("error choosing a mounting command: unsupported partition type"),
+	}
 }
 
 // Validates the attributes of a Partition struct
