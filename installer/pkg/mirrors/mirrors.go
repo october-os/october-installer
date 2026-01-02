@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -42,35 +41,16 @@ func SetMirrorList(countries []string) error {
 func ValidateCountry(country string) error {
 	command := fmt.Sprintf("cat %s | grep %s", mirrorlistFile, country)
 	cmd := exec.Command("/bin/bash", "-c", command)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return MirrorListError{
-			err: err,
-		}
-	}
 
-	if err := cmd.Start(); err != nil {
-		return MirrorListError{
-			err: err,
-		}
-	}
-
-	stdoutBytes, err := io.ReadAll(stdout)
-	if err != nil {
-		return MirrorListError{
-			err: err,
-		}
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return MirrorListError{
-			err: err,
-		}
-	}
-
-	if !strings.Contains(string(stdoutBytes), country) {
-		return MirrorListError{
-			err: errors.New("Invalid country"),
+	if err := cmd.Run(); err != nil {
+		if cmd.ProcessState.ExitCode() == 1 { // Not found
+			return MirrorListError{
+				err: errors.New("Invalid country"),
+			}
+		} else {
+			return MirrorListError{
+				err: err,
+			}
 		}
 	}
 
