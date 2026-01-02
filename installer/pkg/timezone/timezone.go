@@ -11,7 +11,7 @@ import (
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
-// Sets it up inside the new install.
+// Sets timezone up inside the new install.
 //
 // Can return error types:
 //   - PipeError
@@ -35,8 +35,7 @@ func SetHwClock() error {
 	return arch_chroot.Run(command)
 }
 
-// Checks if the given timezone is a valid one with a
-// binary search accross all timezones.
+// Checks if the given timezone is a valid.
 //
 // Can return error types:
 //   - TimezoneError
