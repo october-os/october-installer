@@ -1,1 +1,1 @@
-# arch-couple-installer
+# The official October Linux installer
