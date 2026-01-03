@@ -188,11 +188,7 @@ func (p *Partition) Validate() error {
 		}
 	}
 
-	if err := p.Size.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return p.Size.Validate()
 }
 
 // PartitionSize represents the size of a Partition
