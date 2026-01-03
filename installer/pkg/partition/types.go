@@ -73,6 +73,11 @@ func (d *Drive) Validate() error {
 			Err: errors.New("Drive validation: error=Path is in the wrong format: should start by '/dev/'"),
 		}
 	}
+	for _, partition := range d.Partitions {
+		if err := partition.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -183,7 +188,7 @@ func (p *Partition) Validate() error {
 		}
 	}
 
-	return nil
+	return p.Size.Validate()
 }
 
 // PartitionSize represents the size of a Partition

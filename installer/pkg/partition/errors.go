@@ -2,7 +2,7 @@ package partition
 
 import "fmt"
 
-// NewPartitionSizeParameterError represents an error that occured
+// ValidationError represents an error that occured
 // after validating a struct's attributes
 type ValidationError struct {
 	Err error

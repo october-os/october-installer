@@ -2,9 +2,10 @@ package mirrors
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
-	"slices"
+	"os/exec"
 	"strings"
 )
 
@@ -24,20 +25,32 @@ func SetMirrorList(countries []string) error {
 		}
 	}
 
-	fullCountrySlice := make([]string, 0, len(mirrorMap))
-	for k := range mirrorMap {
-		fullCountrySlice = append(fullCountrySlice, k)
-	}
-
-	if err := areCountriesValid(countries, fullCountrySlice); err != nil {
+	if err := saveMirrorlist(countries, mirrorMap); err != nil {
 		return MirrorListError{
 			err: err,
 		}
 	}
 
-	if err := saveMirrorlist(countries, mirrorMap); err != nil {
-		return MirrorListError{
-			err: err,
+	return nil
+}
+
+// Checks if the given country is present inside mirrorlist.
+//
+// Can return errors of types:
+//   - MirrorListError
+func ValidateCountry(country string) error {
+	command := fmt.Sprintf("cat %s | grep %s", mirrorlistFile, country)
+	cmd := exec.Command("/bin/bash", "-c", command)
+
+	if err := cmd.Run(); err != nil {
+		if cmd.ProcessState.ExitCode() == 1 { // Not found
+			return MirrorListError{
+				err: errors.New("Invalid country"),
+			}
+		} else {
+			return MirrorListError{
+				err: err,
+			}
 		}
 	}
 
@@ -58,17 +71,6 @@ func saveMirrorlist(countries []string, mirrorMap map[string][]string) error {
 			if _, err := file.WriteString(server + "\n"); err != nil {
 				return err
 			}
-		}
-	}
-
-	return nil
-}
-
-// Checks if the given countries are inside the given full country list.
-func areCountriesValid(countries []string, fullCountryList []string) error {
-	for _, country := range countries {
-		if !slices.Contains(fullCountryList, country) {
-			return fmt.Errorf("country %s not present in mirrors", country)
 		}
 	}
 

@@ -8,38 +8,41 @@ import (
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
-// Checks the validity and Sets the network hostname
-// for the newly installed system. It sets it inside /etc/hostname.
+// Sets the network hostname for the newly
+// installed system. It sets it inside /etc/hostname.
 //
 // Can return errors of types:
-//   - HostnameError
 //   - PipeError
 //   - ArchChrootError
 func SetHostname(hostname string) error {
-	if !isRFC1178Complient(hostname) {
-		return HostnameError{
-			Err: errors.New("Invalid hostname"),
-		}
-	}
-
 	command := fmt.Sprintf("echo %s > /etc/hostname", hostname)
-
 	return arch_chroot.Run(command)
 }
 
 // Checks if the given hostname is RFC1178 complient.
 //
 // For more information: https://wiki.archlinux.org/title/Installation_guide#Network_configuration
-func isRFC1178Complient(hostname string) bool {
+//
+// Can return errors of types:
+//   - HostnameError
+func ValidateHostname(hostname string) error {
+	var valid bool = true
+
 	if len(hostname) < 1 || len(hostname) > 63 {
-		return false
+		valid = false
 	} else if hostname[0] == '-' {
-		return false
+		valid = false
 	} else if !charCheck(hostname) {
-		return false
+		valid = false
 	}
 
-	return true
+	if !valid {
+		return HostnameError{
+			Err: errors.New("Invalid hostname. Must be RFC1178 complient"),
+		}
+	}
+
+	return nil
 }
 
 // Checks if the given string is all lowercase and doesn't
