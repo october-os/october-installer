@@ -5,30 +5,18 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"slices"
 	"strings"
 
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
-// Checks if the timezone exist then sets it up inside
-// the new install.
+// Sets timezone up inside the new install.
 //
 // Can return error types:
-//   - TimezoneError
 //   - PipeError
 //   - ArchChrootError
 func SetTime(timezone string) error {
-	isValid, err := isTimezoneValid(timezone)
-	if err != nil {
-		return TimezoneError{
-			Err: err,
-		}
-	} else if !isValid {
-		return TimezoneError{
-			Err: errors.New("Timezone isn't valid"),
-		}
-	}
-
 	command := fmt.Sprintf("ln -sf /usr/share/zoneinfo/%s /etc/localtime", timezone)
 	return arch_chroot.Run(command)
 }
@@ -47,32 +35,25 @@ func SetHwClock() error {
 	return arch_chroot.Run(command)
 }
 
-// Checks if the given timezone is a valid one with a
-// binary search accross all timezones.
-func isTimezoneValid(timezone string) (bool, error) {
+// Checks if the given timezone is a valid.
+//
+// Can return error types:
+//   - TimezoneError
+func ValidateTimezone(timezone string) error {
 	timezones, err := getAllTimezones()
 	if err != nil {
-		return false, err
-	}
-
-	low := 0
-	high := len(timezones) - 1
-
-	for low <= high {
-		mid := low + (high-low)/2
-
-		if timezones[mid] == timezone {
-			return true, nil
-		}
-
-		if timezones[mid] < timezone {
-			low = mid + 1
-		} else {
-			high = mid - 1
+		return TimezoneError{
+			Err: err,
 		}
 	}
 
-	return false, nil
+	if _, found := slices.BinarySearch(timezones, timezone); !found {
+		return TimezoneError{
+			Err: errors.New("Invalid timezone"),
+		}
+	}
+
+	return nil
 }
 
 // Gets all the timezones from STDOUT and returns them
