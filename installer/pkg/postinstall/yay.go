@@ -8,6 +8,8 @@ import (
 
 const yayPath string = "/tmp/yay-bin"
 
+// Clones the repo of yay-bin, from the AUR, inside /tmp
+// and installs it with the builder account.
 func installYay() error {
 	cloneYayBinary := fmt.Sprintf("git clone https://aur.archlinux.org/yay-bin.git %s", yayPath)
 	chownToNobody := fmt.Sprintf("chown %s %s", username, yayPath)

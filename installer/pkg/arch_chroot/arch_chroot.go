@@ -29,8 +29,9 @@ func Run(command string) error {
 	if err != nil {
 		stdErrOutput, _ := io.ReadAll(stderr)
 		return ArchChrootError{
-			StdErr: string(stdErrOutput),
-			Err:    err,
+			Command: command,
+			StdErr:  string(stdErrOutput),
+			Err:     err,
 		}
 	}
 
