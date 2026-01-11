@@ -24,7 +24,7 @@ const nvidiaProprietaryGPUPackage string = "nvidia-580xx-dkms"
 var nvidiaGPUFamilies []string = []string{"TU", "GA", "AD", "GM", "GP", "GV"}
 
 // GPUInfo represents a GPU's fetched information
-type GPUInfo struct {
+type gpuInfo struct {
 	Brand  string
 	Family string
 }
@@ -37,14 +37,14 @@ func BestEffortGPUDrivers() error {
 		return err
 	}
 
-	var officialPackages []string = make([]string, 0)
-	var aurPackages []string = make([]string, 0)
+	var officialPackages []string
+	var aurPackages []string
 
 	switch gpuInfo.Brand {
 	case "Intel":
-		officialPackages = slices.Concat(officialPackages, intelGPUPackages)
+		officialPackages = append(officialPackages, intelGPUPackages...)
 	case "AMD":
-		officialPackages = slices.Concat(officialPackages, amdGPUPackages)
+		officialPackages = append(officialPackages, amdGPUPackages...)
 	case "NVIDIA":
 		switch gpuInfo.Family[:2] {
 		case "TU", "GA", "AD":
@@ -65,54 +65,54 @@ func BestEffortGPUDrivers() error {
 
 // Fetches the system's GPU information using lspci and returns it
 // Can return error type: PostInstallError
-func getGPUInfo() (GPUInfo, error) {
+func getGPUInfo() (gpuInfo, error) {
 	command := "lspci | grep -i 'VGA compatible controller'"
 	cmd := exec.Command("/bin/bash", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return GPUInfo{}, &PostInstallError{
+		return gpuInfo{}, &PostInstallError{
 			err: fmt.Errorf("error piping stdout: error=%s", err.Error()),
 		}
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return GPUInfo{}, &PostInstallError{
+		return gpuInfo{}, &PostInstallError{
 			err: fmt.Errorf("error piping stderr: error=%s", err.Error()),
 		}
 	}
 	if err := cmd.Start(); err != nil {
 		stderrOutput, _ := io.ReadAll(stderr)
-		return GPUInfo{}, &PostInstallError{
+		return gpuInfo{}, &PostInstallError{
 			err: fmt.Errorf("error getting GPU information: error=%s", string(stderrOutput)),
 		}
 	}
 	var stdoutOutput []byte
 	if stdoutOutput, err = io.ReadAll(stdout); err != nil {
-		return GPUInfo{}, &PostInstallError{
+		return gpuInfo{}, &PostInstallError{
 			err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
 		}
 	}
 	if err := cmd.Wait(); err != nil {
-		return GPUInfo{}, &PostInstallError{
+		return gpuInfo{}, &PostInstallError{
 			err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
 		}
 	}
 
 	stdoutOutputString := string(stdoutOutput)
 	if strings.Contains(stdoutOutputString, "Intel") {
-		return GPUInfo{
+		return gpuInfo{
 			Brand: "Intel",
 		}, nil
 	}
 	if strings.Contains(stdoutOutputString, "AMD") {
-		return GPUInfo{
+		return gpuInfo{
 			Brand: "AMD",
 		}, nil
 	}
 	if strings.Contains(stdoutOutputString, "NVIDIA") {
 		for p := range strings.SplitSeq(stdoutOutputString, " ") {
 			if len(p) == 5 && slices.Contains(nvidiaGPUFamilies, p[:2]) {
-				return GPUInfo{
+				return gpuInfo{
 					Brand:  "NVIDIA",
 					Family: p,
 				}, nil
@@ -120,7 +120,7 @@ func getGPUInfo() (GPUInfo, error) {
 		}
 	}
 
-	return GPUInfo{}, &PostInstallError{
+	return gpuInfo{}, &PostInstallError{
 		err: fmt.Errorf("error getting GPU brand: not found"),
 	}
 }
