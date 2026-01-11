@@ -75,27 +75,8 @@ func CreateUser(user *User) error {
 	return nil
 }
 
-// Adds the wheel user group as system admins in /etc/sudoers
-// inside the newly installed system.
-//
-// Errors that can be returned:
-//   - PipeError
-//   - ArchChrootError
-func SetupSudoerFile() error {
-	wheelLine := "%wheel      ALL=(ALL:ALL) ALL"
-	command := fmt.Sprintf("echo \"%s\" >> /etc/sudoers", wheelLine)
-
-	err := arch_chroot.Run(command)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Adds the user with the given username to the wheel group to make
-// it a sudoer inside the newly installed system. Make sure to run
-// SetupSudoerFile() before running this.
+// it a sudoer inside the newly installed system.
 //
 // Errors that can be returned:
 //   - PipeError
