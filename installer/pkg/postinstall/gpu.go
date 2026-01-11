@@ -55,10 +55,10 @@ func BestEffortGPUDrivers() error {
 	}
 
 	if len(officialPackages) > 0 {
-		addGPUPackages(packageFilePath, officialPackages)
+		addGPUPackages(officialPackagesFilePath, officialPackages)
 	}
 	if len(aurPackages) > 0 {
-		addGPUPackages(aurFilePath, aurPackages)
+		addGPUPackages(aurPackagesFilePath, aurPackages)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func addGPUPackages(filePath string, packages []string) error {
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0)
 	if err != nil {
 		return &PostInstallError{
-			err: fmt.Errorf("error writing gpu packages to '%s': error=%s", packageFilePath, err.Error()),
+			err: fmt.Errorf("error writing gpu packages to '%s': error=%s", filePath, err.Error()),
 		}
 	}
 	defer file.Close()
