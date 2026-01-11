@@ -25,8 +25,8 @@ var nvidiaGPUFamilies []string = []string{"TU", "GA", "AD", "GM", "GP", "GV"}
 
 // GPUInfo represents a GPU's fetched information
 type gpuInfo struct {
-	Brand  string
-	Family string
+	brand  string
+	family string
 }
 
 // Chooses which packages should be installed for the system's GPU information
@@ -40,13 +40,13 @@ func BestEffortGPUDrivers() error {
 	var officialPackages []string
 	var aurPackages []string
 
-	switch gpuInfo.Brand {
+	switch gpuInfo.brand {
 	case "Intel":
 		officialPackages = append(officialPackages, intelGPUPackages...)
 	case "AMD":
 		officialPackages = append(officialPackages, amdGPUPackages...)
 	case "NVIDIA":
-		switch gpuInfo.Family[:2] {
+		switch gpuInfo.family[:2] {
 		case "TU", "GA", "AD":
 			officialPackages = append(officialPackages, nvidiaOpenGPUPackage)
 		case "GM", "GP", "GV":
@@ -101,20 +101,20 @@ func getGPUInfo() (gpuInfo, error) {
 	stdoutOutputString := string(stdoutOutput)
 	if strings.Contains(stdoutOutputString, "Intel") {
 		return gpuInfo{
-			Brand: "Intel",
+			brand: "Intel",
 		}, nil
 	}
 	if strings.Contains(stdoutOutputString, "AMD") {
 		return gpuInfo{
-			Brand: "AMD",
+			brand: "AMD",
 		}, nil
 	}
 	if strings.Contains(stdoutOutputString, "NVIDIA") {
 		for p := range strings.SplitSeq(stdoutOutputString, " ") {
 			if len(p) == 5 && slices.Contains(nvidiaGPUFamilies, p[:2]) {
 				return gpuInfo{
-					Brand:  "NVIDIA",
-					Family: p,
+					brand:  "NVIDIA",
+					family: p,
 				}, nil
 			}
 		}
