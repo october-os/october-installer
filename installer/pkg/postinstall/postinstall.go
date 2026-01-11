@@ -8,8 +8,8 @@ import "github.com/october-os/october-installer/pkg/arch_chroot"
 //
 // Can return errors of types :
 //   - PostInstallError
-func InstallPostInstallPackages() error {
-	packages, err := getPackageList(packageFilePath)
+func InstallOfficialPackages() error {
+	packages, err := getPackageList(officialPackagesFilePath)
 	if err != nil {
 		return PostInstallError{
 			err: err,
@@ -46,7 +46,7 @@ func InstallAurHelperAndPackages() error {
 		return err
 	}
 
-	packages, err := getPackageList(aurFilePath)
+	packages, err := getPackageList(aurPackagesFilePath)
 	if err != nil {
 		return PostInstallError{
 			err: err,

@@ -16,8 +16,8 @@ type pkg struct {
 	flags []string
 }
 
-const packageFilePath string = "/root/postinstall/packages"
-const aurFilePath string = "/root/postinstall/aur"
+const officialPackagesFilePath string = "/root/postinstall/packages"
+const aurPackagesFilePath string = "/root/postinstall/aur"
 
 // Downloads all the packages with a package manager.
 // inside the newly installed system.
