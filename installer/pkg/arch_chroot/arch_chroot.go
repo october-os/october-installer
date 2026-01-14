@@ -22,7 +22,7 @@ func Run(command string) error {
 	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return PipeError{Err: err}
+		return ArchChrootError{Err: err}
 	}
 
 	err = cmd.Run()
