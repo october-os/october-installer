@@ -25,7 +25,7 @@ func GenerateLocales(locale string) error {
 
 	command := fmt.Sprintf("%s && %s && %s", sedCmd, localeConfCmd, localegenCmd)
 	if err := arch_chroot.Run(command); err != nil {
-		return &LocaleError{err: err}
+		return LocaleError{err: err}
 	}
 	return nil
 }
@@ -40,11 +40,11 @@ func ValidateLocale(locale string) error {
 
 	if err := cmd.Run(); err != nil {
 		if cmd.ProcessState.ExitCode() == 1 { // not found
-			return &LocaleError{
+			return LocaleError{
 				err: errors.New("Invalid locale"),
 			}
 		} else {
-			return &LocaleError{
+			return LocaleError{
 				err: err,
 			}
 		}

@@ -18,7 +18,7 @@ import (
 func SetTime(timezone string) error {
 	command := fmt.Sprintf("ln -sf /usr/share/zoneinfo/%s /etc/localtime", timezone)
 	if err := arch_chroot.Run(command); err != nil {
-		return &TimezoneError{err: err}
+		return TimezoneError{err: err}
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func SetTime(timezone string) error {
 func SetHwClock() error {
 	command := "hwclock --systohc"
 	if err := arch_chroot.Run(command); err != nil {
-		return &TimezoneError{err: err}
+		return TimezoneError{err: err}
 	}
 	return nil
 }
@@ -46,11 +46,11 @@ func SetHwClock() error {
 func ValidateTimezone(timezone string) error {
 	timezones, err := getAllTimezones()
 	if err != nil {
-		return &TimezoneError{err: err}
+		return TimezoneError{err: err}
 	}
 
 	if _, found := slices.BinarySearch(timezones, timezone); !found {
-		return &TimezoneError{
+		return TimezoneError{
 			err: errors.New("Invalid timezone"),
 		}
 	}

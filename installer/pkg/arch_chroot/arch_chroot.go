@@ -21,13 +21,13 @@ func Run(command string) error {
 	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return &ArchChrootError{err: err}
+		return ArchChrootError{err: err}
 	}
 
 	err = cmd.Run()
 	if err != nil {
 		stdErrOutput, _ := io.ReadAll(stderr)
-		return &ArchChrootError{
+		return ArchChrootError{
 			command: command,
 			stdErr:  string(stdErrOutput),
 			err:     err,

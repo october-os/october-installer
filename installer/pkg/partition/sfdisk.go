@@ -26,7 +26,6 @@ type SfdiskJsonPartition struct {
 // Useful to compare the state before and after creating partitions
 //
 // Decodes the JSON state into a SfdiskJsonDrive object and returns it
-// Can return one type of error: SetupPartitionsError
 func getDriveStateWithSfdisk(drive string) (*SfdiskJsonDrive, error) {
 	cmd := exec.Command("sfdisk", "--json", drive)
 	stdout, err := cmd.StdoutPipe()

@@ -16,7 +16,7 @@ import (
 func SetHostname(hostname string) error {
 	command := fmt.Sprintf("echo %s > /etc/hostname", hostname)
 	if err := arch_chroot.Run(command); err != nil {
-		return &HostnameError{err: err}
+		return HostnameError{err: err}
 	}
 	return nil
 }
@@ -39,7 +39,7 @@ func ValidateHostname(hostname string) error {
 	}
 
 	if !valid {
-		return &HostnameError{
+		return HostnameError{
 			err: errors.New("Invalid hostname. Must be RFC1178 complient"),
 		}
 	}

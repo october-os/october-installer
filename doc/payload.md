@@ -34,6 +34,7 @@
   "timezone": "[user timezone]",
   "locale": "[user locale]",
   "hostname": "[user hostname]",
-  "rootPassword": "[root password]"
+  "rootPassword": "[root password]",
+  "bestEffortGPU": true
 }
 ```

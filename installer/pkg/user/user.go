@@ -23,7 +23,7 @@ type User struct {
 // aren't valid.
 func (u *User) Validate() error {
 	if strings.TrimSpace(u.Username) == "" || strings.TrimSpace(u.Password) == "" {
-		return &NewUserError{
+		return NewUserError{
 			err: errors.New("Can't create user with empty username or password"),
 		}
 	}
@@ -31,7 +31,7 @@ func (u *User) Validate() error {
 	if strings.TrimSpace(u.Homepath) == "" {
 		u.Homepath = fmt.Sprintf("/home/%s", u.Username)
 	} else if !strings.HasPrefix(u.Homepath, "/") {
-		return &NewUserError{
+		return NewUserError{
 			err: errors.New("Provide a valid directory for user home path"),
 		}
 	}
@@ -45,7 +45,7 @@ func (u *User) Validate() error {
 func SetRootPassword(password string) error {
 	command := fmt.Sprintf("echo %s | passwd -s", password)
 	if err := arch_chroot.Run(command); err != nil {
-		return &NewUserError{err: err}
+		return NewUserError{err: err}
 	}
 
 	return nil
@@ -57,17 +57,17 @@ func SetRootPassword(password string) error {
 //   - NewUserError
 func CreateUser(user *User) error {
 	if err := userAdd(user.Username, user.Homepath); err != nil {
-		return &NewUserError{err: err}
+		return NewUserError{err: err}
 	}
 
 	if err := setPassword(user.Username, user.Password); err != nil {
-		return &NewUserError{err: err}
+		return NewUserError{err: err}
 	}
 
 	if user.Sudoer {
 
 		if err := addToSudoer(user.Username); err != nil {
-			return &NewUserError{err: err}
+			return NewUserError{err: err}
 		}
 	}
 

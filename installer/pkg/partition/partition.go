@@ -16,20 +16,20 @@ import (
 // Can return one type of error: PartitionError
 func SetupPartitions(drives []Drive) error {
 	if err := checkCompatibility(drives); err != nil {
-		return &PartitionError{err: err}
+		return PartitionError{err: err}
 	}
 	newPartitionsMappings, err := createPartitions(drives)
 	if err != nil {
-		return &PartitionError{err: err}
+		return PartitionError{err: err}
 	}
 
 	for _, mapping := range newPartitionsMappings {
 		for partition, sfdiskPartition := range mapping {
 			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
-				return &PartitionError{err: err}
+				return PartitionError{err: err}
 			}
 			if err = mountPartition(partition, sfdiskPartition.Node); err != nil {
-				return &PartitionError{err: err}
+				return PartitionError{err: err}
 			}
 		}
 	}

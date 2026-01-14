@@ -11,11 +11,11 @@ type HostnameError struct {
 
 // Error returns a formatted error message containing the
 // original error message inside.
-func (e *HostnameError) Error() string {
+func (e HostnameError) Error() string {
 	return fmt.Sprintf("Error setting hostname: error=%s", e.err.Error())
 }
 
 // Unwrap returns the original error wrapped inside.
-func (e *HostnameError) Unwrap() error {
+func (e HostnameError) Unwrap() error {
 	return e.err
 }

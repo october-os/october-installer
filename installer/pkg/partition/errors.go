@@ -12,12 +12,12 @@ type PartitionError struct {
 
 // Returns a formatted error message including the underlying
 // error message
-func (e *PartitionError) Error() string {
+func (e PartitionError) Error() string {
 	return fmt.Sprintf("Error setting up partitions: error=%s", e.err.Error())
 }
 
 // Unwrap returns the original error wrapped inside.
-func (e *PartitionError) Unwrap() error {
+func (e PartitionError) Unwrap() error {
 	return e.err
 }
 
@@ -32,11 +32,11 @@ type PartitionTableCompatibilityError struct {
 
 // Returns a formatted error message including the underlying
 // error message
-func (e *PartitionTableCompatibilityError) Error() string {
+func (e PartitionTableCompatibilityError) Error() string {
 	return e.err.Error()
 }
 
 // Unwrap returns the original error wrapped inside.
-func (e *PartitionTableCompatibilityError) Unwrap() error {
+func (e PartitionTableCompatibilityError) Unwrap() error {
 	return e.err
 }

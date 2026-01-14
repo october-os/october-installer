@@ -11,15 +11,15 @@ import "github.com/october-os/october-installer/pkg/arch_chroot"
 func InstallOfficialPackages() error {
 	packages, err := getPackageList(officialPackagesFilePath)
 	if err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	if err := downloadAllPackages(packages, false); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	if err := packageFlagParser(packages); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	return nil
@@ -42,19 +42,19 @@ func InstallAurHelperAndPackages() error {
 
 	packages, err := getPackageList(aurPackagesFilePath)
 	if err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	if err := downloadAllPackages(packages, true); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	if err := deleteBuilderAccount(); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	if err := packageFlagParser(packages); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	return nil
@@ -67,7 +67,7 @@ func InstallAurHelperAndPackages() error {
 func EnableMultilibRepo() error {
 	command := "sed -i -e '/#\\[multilib\\]/,+1s/^#//' /etc/pacman.conf"
 	if err := arch_chroot.Run(command); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func EnableMultilibRepo() error {
 //   - PostInstallError
 func SetupSudo() error {
 	if err := addWheelGroup(); err != nil {
-		return &PostInstallError{err: err}
+		return PostInstallError{err: err}
 	}
 
 	return nil

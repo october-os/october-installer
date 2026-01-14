@@ -34,7 +34,7 @@ type gpuInfo struct {
 func BestEffortGPUDrivers() error {
 	gpuInfo, err := getGPUInfo()
 	if err != nil {
-		return err
+		return &PostInstallError{err: err}
 	}
 
 	var officialPackages []string
@@ -55,10 +55,14 @@ func BestEffortGPUDrivers() error {
 	}
 
 	if len(officialPackages) > 0 {
-		addGPUPackages(officialPackagesFilePath, officialPackages)
+		if err := addGPUPackages(officialPackagesFilePath, officialPackages); err != nil {
+			return &PostInstallError{err: err}
+		}
 	}
 	if len(aurPackages) > 0 {
-		addGPUPackages(aurPackagesFilePath, aurPackages)
+		if err := addGPUPackages(aurPackagesFilePath, aurPackages); err != nil {
+			return &PostInstallError{err: err}
+		}
 	}
 	return nil
 }

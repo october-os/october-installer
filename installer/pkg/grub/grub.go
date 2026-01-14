@@ -21,15 +21,15 @@ const bootloaderId string = "GRUB"
 //   - GrubError
 func InstallGrub() error {
 	if err := grubInstall(); err != nil {
-		return &GrubError{err: err}
+		return GrubError{err: err}
 	}
 
 	if err := setUpOsProber(); err != nil {
-		return &GrubError{err: err}
+		return GrubError{err: err}
 	}
 
 	if err := updateGrubConfig(); err != nil {
-		return &GrubError{err: err}
+		return GrubError{err: err}
 	}
 
 	return nil

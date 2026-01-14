@@ -69,7 +69,7 @@ type Drive struct {
 // Returns a PartitionError if validation fails
 func (d *Drive) Validate() error {
 	if !strings.HasPrefix(d.Path, "/dev/") {
-		return &PartitionError{
+		return PartitionError{
 			err: errors.New("Drive validation: error=Path is in the wrong format: should start by '/dev/'"),
 		}
 	}
@@ -148,19 +148,19 @@ func (p *Partition) mountCommand(path string) (*exec.Cmd, error) {
 func (p *Partition) Validate() error {
 	if p.MountPoint != "" {
 		if !strings.HasPrefix(p.MountPoint, "/") {
-			return &PartitionError{
+			return PartitionError{
 				err: errors.New("Partition validation: error=MountPoint is in the wrong format: should start by '/'"),
 			}
 		}
 	}
 	if !slices.Contains(supportedGptPartitionTypes, p.PartitionType) {
-		return &PartitionError{
+		return PartitionError{
 			err: errors.New("Partition validation: error=specified PartitionType is not supported"),
 		}
 	}
 	if p.FileSystem != "" {
 		if !slices.Contains(supportedFileSystems, p.FileSystem) {
-			return &PartitionError{
+			return PartitionError{
 				err: errors.New("Partition validation: error=specified FileSystem is not supported"),
 			}
 		}
@@ -168,7 +168,7 @@ func (p *Partition) Validate() error {
 
 	if p.FileSystem == "" {
 		if p.PartitionType != gptPartitionTypeEfi && p.PartitionType != gptPartitionTypeSwap {
-			return &PartitionError{
+			return PartitionError{
 				err: errors.New("Partition validation: error=Filesystem is not defined, but the partition type needs a file system"),
 			}
 		}
@@ -176,7 +176,7 @@ func (p *Partition) Validate() error {
 
 	if p.MountPoint == "" {
 		if p.PartitionType == gptPartitionTypeEfi || p.PartitionType == gptPartitionTypeSwap || p.PartitionType == gptPartitionTypeRoot {
-			return &PartitionError{
+			return PartitionError{
 				err: errors.New("Partition validation: error=MountPoint is not defined, but the partition type needs a mount point"),
 			}
 		}
@@ -200,14 +200,14 @@ type PartitionSize struct {
 // Returns a PartitionError if validation fails
 func (p *PartitionSize) Validate() error {
 	if p.TakeRemaining == false && (p.Amount == 0 || p.Unit == "") {
-		return &PartitionError{
+		return PartitionError{
 			err: errors.New("PartitionSize validation: error=TakeRemaining is false but Amount and/or Unit are not defined"),
 		}
 	}
 
 	if p.Amount != 0 {
 		if p.Amount < 1 {
-			return &PartitionError{
+			return PartitionError{
 				err: errors.New("PartitionSize validation: error=Amount must be greater or equal 1"),
 			}
 		}
@@ -215,7 +215,7 @@ func (p *PartitionSize) Validate() error {
 
 	if p.Unit != "" {
 		if !slices.Contains(supportedPartitionSizeUnits, p.Unit) {
-			return &PartitionError{
+			return PartitionError{
 				err: errors.New("PartitionSize validation: error=specified Unit is not supported"),
 			}
 		}

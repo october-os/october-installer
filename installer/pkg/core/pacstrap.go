@@ -19,11 +19,11 @@ const baseLinuxFirmware string = "linux-firmware"
 func InstallBasicInstallation() error {
 	cpuMicrocode, err := getCpuMicroCode()
 	if err != nil {
-		return &CoreInstallError{
+		return CoreInstallError{
 			err: err,
 		}
 	} else if cpuMicrocode == "" {
-		return &CoreInstallError{
+		return CoreInstallError{
 			err: errors.New("Unsupported CPU detected. Needs to be an AMD or Intel X86_64 CPU."),
 		}
 	}
@@ -31,7 +31,7 @@ func InstallBasicInstallation() error {
 	cmd := exec.Command("pacstrap", "-K", "/mnt", baseArch, linuxKernel, baseLinuxFirmware, cpuMicrocode)
 
 	if err := cmd.Run(); err != nil {
-		return &CoreInstallError{
+		return CoreInstallError{
 			err: err,
 		}
 	}

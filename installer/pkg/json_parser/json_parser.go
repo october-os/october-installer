@@ -30,32 +30,32 @@ func ParseJson(jsonString string) (*Installation, error) {
 	jsonBytes := []byte(jsonString)
 	var installation Installation
 	if err := json.Unmarshal(jsonBytes, &installation); err != nil {
-		return nil, &JsonParsingError{err: err}
+		return nil, JsonParsingError{err: err}
 	}
 
 	for _, drive := range installation.Drives {
 		if err := drive.Validate(); err != nil {
-			return nil, &JsonParsingError{err: err}
+			return nil, JsonParsingError{err: err}
 		}
 	}
 	for _, user := range installation.Users {
 		if err := user.Validate(); err != nil {
-			return nil, &JsonParsingError{err: err}
+			return nil, JsonParsingError{err: err}
 		}
 	}
 	for _, country := range installation.MirrorCountries {
 		if err := mirrors.ValidateCountry(country); err != nil {
-			return nil, &JsonParsingError{err: err}
+			return nil, JsonParsingError{err: err}
 		}
 	}
 	if err := timezone.ValidateTimezone(installation.Timezone); err != nil {
-		return nil, &JsonParsingError{err: err}
+		return nil, JsonParsingError{err: err}
 	}
 	if err := locale.ValidateLocale(installation.Locale); err != nil {
-		return nil, &JsonParsingError{err: err}
+		return nil, JsonParsingError{err: err}
 	}
 	if err := hostname.ValidateHostname(installation.Hostname); err != nil {
-		return nil, &JsonParsingError{err: err}
+		return nil, JsonParsingError{err: err}
 	}
 
 	return &installation, nil
