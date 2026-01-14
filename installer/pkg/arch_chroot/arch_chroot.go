@@ -15,23 +15,22 @@ const shell string = "/bin/bash"
 //
 // It executes: arch-chroot [mount_point] [shell] -c [command]
 //
-// It can return two types of errors:
-//   - PipeError: When it failed to pipe STDERR
-//   - ArchChrootError: When the command ran with arch-chroot failed.
+// It can return types of errors:
+//   - ArchChrootError
 func Run(command string) error {
 	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return ArchChrootError{Err: err}
+		return &ArchChrootError{err: err}
 	}
 
 	err = cmd.Run()
 	if err != nil {
 		stdErrOutput, _ := io.ReadAll(stderr)
-		return ArchChrootError{
-			Command: command,
-			StdErr:  string(stdErrOutput),
-			Err:     err,
+		return &ArchChrootError{
+			command: command,
+			stdErr:  string(stdErrOutput),
+			err:     err,
 		}
 	}
 

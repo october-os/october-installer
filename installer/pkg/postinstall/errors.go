@@ -13,11 +13,11 @@ type PostInstallError struct {
 
 // Error returns a formatted error message containing the
 // original error message inside.
-func (e PostInstallError) Error() string {
-	return fmt.Sprintf("error during post-installation: error=%s", e.err.Error())
+func (e *PostInstallError) Error() string {
+	return fmt.Sprintf("Error during post-installation: error=%s", e.err.Error())
 }
 
 // Unwrap returns the original error wrapped inside.
-func (e PostInstallError) Unwrap() error {
+func (e *PostInstallError) Unwrap() error {
 	return e.err
 }

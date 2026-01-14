@@ -20,13 +20,13 @@ const mirrorlistFile string = "/etc/pacman.d/mirrorlist"
 func SetMirrorList(countries []string) error {
 	mirrorMap, err := getMirrors()
 	if err != nil {
-		return MirrorListError{
+		return &MirrorListError{
 			err: err,
 		}
 	}
 
 	if err := saveMirrorlist(countries, mirrorMap); err != nil {
-		return MirrorListError{
+		return &MirrorListError{
 			err: err,
 		}
 	}
@@ -44,11 +44,11 @@ func ValidateCountry(country string) error {
 
 	if err := cmd.Run(); err != nil {
 		if cmd.ProcessState.ExitCode() == 1 { // Not found
-			return MirrorListError{
+			return &MirrorListError{
 				err: errors.New("Invalid country"),
 			}
 		} else {
-			return MirrorListError{
+			return &MirrorListError{
 				err: err,
 			}
 		}

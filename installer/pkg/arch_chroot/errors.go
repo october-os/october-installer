@@ -7,18 +7,18 @@ import "fmt"
 //
 // It wraps the original error along with the STDERR output for better debugging.
 type ArchChrootError struct {
-	Command string
-	StdErr  string
-	Err     error
+	command string
+	stdErr  string
+	err     error
 }
 
 // Error returns a formatted error message including the content of STDERR
 // and the original error message.
-func (e ArchChrootError) Error() string {
-	return fmt.Sprintf("arch-chroot failed: Command=%s, STDERR=%q, error=%v", e.Command, e.StdErr, e.Err.Error())
+func (e *ArchChrootError) Error() string {
+	return fmt.Sprintf("Error running arch-chroot: command=%s, stderr=%q, error=%v", e.command, e.stdErr, e.err.Error())
 }
 
-// Unwrap returns the underlying error for error chaining.
-func (e ArchChrootError) Unwrap() error {
-	return e.Err
+// Unwrap returns the original error wrapped inside.
+func (e *ArchChrootError) Unwrap() error {
+	return e.err
 }

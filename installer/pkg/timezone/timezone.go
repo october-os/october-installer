@@ -14,11 +14,13 @@ import (
 // Sets timezone up inside the new install.
 //
 // Can return error types:
-//   - PipeError
-//   - ArchChrootError
+//   - TimezoneError
 func SetTime(timezone string) error {
 	command := fmt.Sprintf("ln -sf /usr/share/zoneinfo/%s /etc/localtime", timezone)
-	return arch_chroot.Run(command)
+	if err := arch_chroot.Run(command); err != nil {
+		return &TimezoneError{err: err}
+	}
+	return nil
 }
 
 // Sets up hardware clock to generate /etc/adjtime.
@@ -28,11 +30,13 @@ func SetTime(timezone string) error {
 //	hwclock --systohc
 //
 // Can return error types:
-//   - PipeError
-//   - ArchChrootError
+//   - TimezoneError
 func SetHwClock() error {
 	command := "hwclock --systohc"
-	return arch_chroot.Run(command)
+	if err := arch_chroot.Run(command); err != nil {
+		return &TimezoneError{err: err}
+	}
+	return nil
 }
 
 // Checks if the given timezone is a valid.
@@ -42,14 +46,12 @@ func SetHwClock() error {
 func ValidateTimezone(timezone string) error {
 	timezones, err := getAllTimezones()
 	if err != nil {
-		return TimezoneError{
-			Err: err,
-		}
+		return &TimezoneError{err: err}
 	}
 
 	if _, found := slices.BinarySearch(timezones, timezone); !found {
-		return TimezoneError{
-			Err: errors.New("Invalid timezone"),
+		return &TimezoneError{
+			err: errors.New("Invalid timezone"),
 		}
 	}
 
