@@ -15,6 +15,7 @@ import (
 	"github.com/october-os/october-installer/pkg/user"
 )
 
+// Returns the exit code that should be used depending on the error.
 func GetExitCode(e error) int {
 	var (
 		archChrootErr  arch_chroot.ArchChrootError

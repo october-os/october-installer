@@ -11,7 +11,7 @@ type JsonParsingError struct {
 // Returns a formatted error message including the underlying
 // error message
 func (e JsonParsingError) Error() string {
-	return fmt.Sprintf("Error validating JSON: error=%v", e.err)
+	return fmt.Sprintf("Error validating JSON: error=%s", e.err.Error())
 }
 
 // Unwrap returns the original error wrapped inside.
