@@ -40,10 +40,12 @@ func (u *User) Validate() error {
 }
 
 // Sets the given password for the root user.
+// Errors that can be returned:
+//   - NewUserError
 func SetRootPassword(password string) error {
 	command := fmt.Sprintf("echo %s | passwd -s", password)
 	if err := arch_chroot.Run(command); err != nil {
-		return err
+		return NewUserError{err: err}
 	}
 
 	return nil
@@ -52,23 +54,20 @@ func SetRootPassword(password string) error {
 // Takes in a user then creates it in the newly installed system.
 //
 // Errors that can be returned:
-//   - PipeError
-//   - ArchChrootError
+//   - NewUserError
 func CreateUser(user *User) error {
-	err := userAdd(user.Username, user.Homepath)
-	if err != nil {
-		return err
+	if err := userAdd(user.Username, user.Homepath); err != nil {
+		return NewUserError{err: err}
 	}
 
-	err = setPassword(user.Username, user.Password)
-	if err != nil {
-		return err
+	if err := setPassword(user.Username, user.Password); err != nil {
+		return NewUserError{err: err}
 	}
 
 	if user.Sudoer {
-		err = addToSudoer(user.Username)
-		if err != nil {
-			return err
+
+		if err := addToSudoer(user.Username); err != nil {
+			return NewUserError{err: err}
 		}
 	}
 
@@ -77,51 +76,21 @@ func CreateUser(user *User) error {
 
 // Adds the user with the given username to the wheel group to make
 // it a sudoer inside the newly installed system.
-//
-// Errors that can be returned:
-//   - PipeError
-//   - ArchChrootError
 func addToSudoer(username string) error {
 	addToWheel := fmt.Sprintf("usermod -aG wheel %s", username)
-
-	err := arch_chroot.Run(addToWheel)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(addToWheel)
 }
 
 // Runs useradd with the given username and homepath inside the newly
 // installed system.
-//
-// Errors that can be returned:
-//   - PipeError
-//   - ArchChrootError
 func userAdd(username, homepath string) error {
 	createCommand := fmt.Sprintf("useradd -m %s -d %s", username, homepath)
-
-	err := arch_chroot.Run(createCommand)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(createCommand)
 }
 
 // Sets the given user password for the given password inside
 // the newly installed system.
-//
-// Errors that can be returned:
-//   - PipeError
-//   - ArchChrootError
 func setPassword(username, password string) error {
 	command := fmt.Sprintf("echo %s | passwd %s -s", password, username)
-
-	err := arch_chroot.Run(command)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(command)
 }

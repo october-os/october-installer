@@ -6,17 +6,16 @@ import "fmt"
 // when trying to set up the network hostname of the
 // new system.
 type HostnameError struct {
-	Err error
+	err error
 }
 
 // Error returns a formatted error message containing the
 // original error message inside.
 func (e HostnameError) Error() string {
-	return fmt.Sprintf("Hostname error: error=%s", e.Err.Error())
+	return fmt.Sprintf("Error setting hostname: error=%s", e.err.Error())
 }
 
-// Unwrap returns the original error wrapped inside
-// HostnameError.
+// Unwrap returns the original error wrapped inside.
 func (e HostnameError) Unwrap() error {
-	return e.Err
+	return e.err
 }

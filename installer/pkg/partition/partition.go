@@ -13,23 +13,23 @@ import (
 // 2. Creates the partitions
 // 3. Formats and mounts each partition
 //
-// Can return one type of error: SetupPartitionsError
+// Can return one type of error: PartitionError
 func SetupPartitions(drives []Drive) error {
 	if err := checkCompatibility(drives); err != nil {
-		return err
+		return PartitionError{err: err}
 	}
 	newPartitionsMappings, err := createPartitions(drives)
 	if err != nil {
-		return err
+		return PartitionError{err: err}
 	}
 
 	for _, mapping := range newPartitionsMappings {
 		for partition, sfdiskPartition := range mapping {
 			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
-				return err
+				return PartitionError{err: err}
 			}
 			if err = mountPartition(partition, sfdiskPartition.Node); err != nil {
-				return err
+				return PartitionError{err: err}
 			}
 		}
 	}
@@ -39,44 +39,25 @@ func SetupPartitions(drives []Drive) error {
 
 // Checks the compatibility of a list of Drives
 // A drive needs the GPT partition table to be compatible
-//
-// Can return one type of error: SetupPartitionsError
 func checkCompatibility(drives []Drive) error {
 	for _, drive := range drives {
 		cmd := exec.Command("lsblk", drive.Path, "-dno", "pttype")
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
-			return &SetupPartitionsError{
-				Err: fmt.Errorf("error piping stdout: error=%s", err.Error()),
-			}
-		}
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return &SetupPartitionsError{
-				Err: fmt.Errorf("error piping stderr: error=%s", err.Error()),
-			}
+			return err
 		}
 		if err := cmd.Start(); err != nil {
-			stderrOutput, _ := io.ReadAll(stderr)
-			return &SetupPartitionsError{
-				Err: fmt.Errorf("error getting partition table type for drive '%s': error=%s", drive.Path, string(stderrOutput)),
-			}
+			return err
 		}
 		var stdoutOutput []byte
 		if stdoutOutput, err = io.ReadAll(stdout); err != nil {
-			return &SetupPartitionsError{
-				Err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
-			}
+			return err
 		}
 		if err := cmd.Wait(); err != nil {
-			return &SetupPartitionsError{
-				Err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
-			}
+			return err
 		}
 		if string(stdoutOutput) != "gpt\n" {
-			return &PartitionTableCompatibilityError{
-				Err: fmt.Errorf("drive '%s' is not compatible: partition table must be GPT", drive.Path),
-			}
+			return fmt.Errorf("drive '%s' is not compatible: partition table must be GPT", drive.Path)
 		}
 	}
 	return nil
@@ -86,7 +67,6 @@ func checkCompatibility(drives []Drive) error {
 //
 // Returns a mapping of the Partition and its corresponding SfdiskJsonPartition
 // to map the Partition object to the partition created on the system
-// Can return one type of error: SetupPartitionsError
 func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, error) {
 	partitioningFiles, err := createPartitioningFiles(drives)
 	if err != nil {
@@ -102,9 +82,7 @@ func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, erro
 		if drive.Append {
 			initialState, err = getDriveStateWithSfdisk(drive.Path)
 			if err != nil {
-				return nil, &SetupPartitionsError{
-					Err: fmt.Errorf("error getting initial state of drive '%s': error=%s", drive.Path, err.Error()),
-				}
+				return nil, err
 			}
 			sfdiskCommand = fmt.Sprintf("sfdisk -a %s < %s", drive.Path, fileName)
 		} else {
@@ -112,26 +90,15 @@ func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, erro
 		}
 
 		cmd := exec.Command("/bin/bash", "-c", sfdiskCommand)
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return nil, &SetupPartitionsError{
-				Err: fmt.Errorf("error piping stderr: error=%s", err.Error()),
-			}
-		}
 
 		if err := cmd.Run(); err != nil {
-			stderrOutput, _ := io.ReadAll(stderr)
-			return nil, &SetupPartitionsError{
-				Err: fmt.Errorf("error creating partitions on drive '%s' with file '%s' using sfdisk: error=%s", drive.Path, fileName, string(stderrOutput)),
-			}
+			return nil, err
 		}
 
 		stateAfterCreatingPartitions, err := getDriveStateWithSfdisk(drive.Path)
 		var newPartitions []SfdiskJsonPartition
 		if err != nil {
-			return nil, &SetupPartitionsError{
-				Err: fmt.Errorf("error getting state after partitions creation of drive '%s': error=%s", drive.Path, err.Error()),
-			}
+			return nil, err
 		}
 		if initialState != nil {
 			newPartitions = stateAfterCreatingPartitions.PartitionTable.Partitions[len(initialState.PartitionTable.Partitions):]
@@ -154,7 +121,6 @@ func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, erro
 // from a list of Drives
 //
 // Returns a map of the drives and their files name
-// Can return one type of error: SetupPartitionsError
 func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 	drivePartitionsFiles := make(map[*Drive]string)
 	for _, drive := range drives {
@@ -163,9 +129,7 @@ func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 
 		file, err := os.Create(fileName)
 		if err != nil {
-			return nil, &SetupPartitionsError{
-				Err: fmt.Errorf("could not create file '%s' for '%s' drive partitioning: error=%s", fileName, drive.Path, err.Error()),
-			}
+			return nil, err
 		}
 		defer file.Close()
 
@@ -173,9 +137,7 @@ func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 			partitionEntry := fmt.Sprintf("%s\n", partition.toSfdiskFormat())
 			_, err := file.WriteString(partitionEntry)
 			if err != nil {
-				return nil, &SetupPartitionsError{
-					Err: fmt.Errorf("could not edit file '%s' for partitioning: error=%s", fileName, err.Error()),
-				}
+				return nil, err
 			}
 		}
 	}
@@ -183,40 +145,28 @@ func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 }
 
 // Formats a partition
-//
-// Can return one type of error: SetupPartitionsError
 func formatPartition(partition Partition, path string) error {
 	cmd, err := partition.formatCommand(path)
 	if err != nil {
-		return &SetupPartitionsError{
-			Err: fmt.Errorf("error formatting partition '%s': error=%s", path, err.Error()),
-		}
+		return err
 	}
 
 	if err := cmd.Run(); err != nil {
-		return &SetupPartitionsError{
-			Err: fmt.Errorf("error formatting partition '%s': error=%s", path, err.Error()),
-		}
+		return err
 	}
 
 	return nil
 }
 
 // Mounts a partition
-//
-// Can return one type of error: SetupPartitionsError
 func mountPartition(partition Partition, path string) error {
 	cmd, err := partition.mountCommand(path)
 	if err != nil {
-		return &SetupPartitionsError{
-			Err: fmt.Errorf("error mounting partition '%s': error=%s", path, err.Error()),
-		}
+		return err
 	}
 
 	if err := cmd.Run(); err != nil {
-		return &SetupPartitionsError{
-			Err: fmt.Errorf("error mounting partition '%s': error=%s", path, err.Error()),
-		}
+		return err
 	}
 
 	return nil

@@ -18,18 +18,21 @@ const bootloaderId string = "GRUB"
 //   - grub-mkconfig
 //
 // Can return error types:
-//   - PipeError
-//   - ArchChrootError
+//   - GrubError
 func InstallGrub() error {
 	if err := grubInstall(); err != nil {
-		return err
+		return GrubError{err: err}
 	}
 
 	if err := setUpOsProber(); err != nil {
-		return err
+		return GrubError{err: err}
 	}
 
-	return updateGrubConfig()
+	if err := updateGrubConfig(); err != nil {
+		return GrubError{err: err}
+	}
+
+	return nil
 }
 
 // Updates the current Grub config.

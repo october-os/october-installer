@@ -5,16 +5,16 @@ import "fmt"
 // JsonParsingError represents an error that occured
 // trying to parse the json
 type JsonParsingError struct {
-	Err error
+	err error
 }
 
 // Returns a formatted error message including the underlying
 // error message
-func (e *JsonParsingError) Error() string {
-	return fmt.Sprintf("validation error: error=%v", e.Err)
+func (e JsonParsingError) Error() string {
+	return fmt.Sprintf("Error validating JSON: error=%s", e.err.Error())
 }
 
-// Returns the error
-func (e *JsonParsingError) Unwrap() error {
-	return e.Err
+// Unwrap returns the original error wrapped inside.
+func (e JsonParsingError) Unwrap() error {
+	return e.err
 }

@@ -34,7 +34,7 @@ type gpuInfo struct {
 func BestEffortGPUDrivers() error {
 	gpuInfo, err := getGPUInfo()
 	if err != nil {
-		return err
+		return &PostInstallError{err: err}
 	}
 
 	var officialPackages []string
@@ -55,47 +55,36 @@ func BestEffortGPUDrivers() error {
 	}
 
 	if len(officialPackages) > 0 {
-		addGPUPackages(officialPackagesFilePath, officialPackages)
+		if err := addGPUPackages(officialPackagesFilePath, officialPackages); err != nil {
+			return &PostInstallError{err: err}
+		}
 	}
 	if len(aurPackages) > 0 {
-		addGPUPackages(aurPackagesFilePath, aurPackages)
+		if err := addGPUPackages(aurPackagesFilePath, aurPackages); err != nil {
+			return &PostInstallError{err: err}
+		}
 	}
 	return nil
 }
 
 // Fetches the system's GPU information using lspci and returns it
-// Can return error type: PostInstallError
 func getGPUInfo() (gpuInfo, error) {
 	command := "lspci | grep -i 'VGA compatible controller'"
 	cmd := exec.Command("/bin/bash", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return gpuInfo{}, &PostInstallError{
-			err: fmt.Errorf("error piping stdout: error=%s", err.Error()),
-		}
+		return gpuInfo{}, err
 	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return gpuInfo{}, &PostInstallError{
-			err: fmt.Errorf("error piping stderr: error=%s", err.Error()),
-		}
-	}
+
 	if err := cmd.Start(); err != nil {
-		stderrOutput, _ := io.ReadAll(stderr)
-		return gpuInfo{}, &PostInstallError{
-			err: fmt.Errorf("error getting GPU information: error=%s", string(stderrOutput)),
-		}
+		return gpuInfo{}, err
 	}
 	var stdoutOutput []byte
 	if stdoutOutput, err = io.ReadAll(stdout); err != nil {
-		return gpuInfo{}, &PostInstallError{
-			err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
-		}
+		return gpuInfo{}, err
 	}
 	if err := cmd.Wait(); err != nil {
-		return gpuInfo{}, &PostInstallError{
-			err: fmt.Errorf("error reading stdout: error=%s", err.Error()),
-		}
+		return gpuInfo{}, err
 	}
 
 	stdoutOutputString := string(stdoutOutput)
@@ -120,19 +109,14 @@ func getGPUInfo() (gpuInfo, error) {
 		}
 	}
 
-	return gpuInfo{}, &PostInstallError{
-		err: fmt.Errorf("error getting GPU brand: not found"),
-	}
+	return gpuInfo{}, fmt.Errorf("error getting GPU brand: not found")
 }
 
 // Adds the packages to a given file path in this format: "- package\n"
-// Can return error type: PostInstallError
 func addGPUPackages(filePath string, packages []string) error {
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0)
 	if err != nil {
-		return &PostInstallError{
-			err: fmt.Errorf("error writing gpu packages to '%s': error=%s", filePath, err.Error()),
-		}
+		return err
 	}
 	defer file.Close()
 	for _, p := range packages {

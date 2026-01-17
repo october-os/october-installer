@@ -2,40 +2,23 @@ package partition
 
 import "fmt"
 
-// ValidationError represents an error that occured
-// after validating a struct's attributes
-type ValidationError struct {
-	Err error
-}
-
-// Returns a formatted error message including the underlying
-// error message
-func (e *ValidationError) Error() string {
-	return fmt.Sprintf("validation error: error=%v", e.Err)
-}
-
-// Returns the error
-func (e *ValidationError) Unwrap() error {
-	return e.Err
-}
-
-// SetupPartitionsError represents an error that occured
+// PartitionError represents an error that occured
 // after trying to create partitions
 //
 // It wraps the underlying error for better clarity
-type SetupPartitionsError struct {
-	Err error
+type PartitionError struct {
+	err error
 }
 
 // Returns a formatted error message including the underlying
 // error message
-func (e *SetupPartitionsError) Error() string {
-	return e.Err.Error()
+func (e PartitionError) Error() string {
+	return fmt.Sprintf("Error setting up partitions: error=%s", e.err.Error())
 }
 
-// Unwrap returns the underlying error for error chaining
-func (e *SetupPartitionsError) Unwrap() error {
-	return e.Err
+// Unwrap returns the original error wrapped inside.
+func (e PartitionError) Unwrap() error {
+	return e.err
 }
 
 // PartitionTableCompatibilityError represents an error that occured
@@ -44,16 +27,16 @@ func (e *SetupPartitionsError) Unwrap() error {
 //
 // It wraps the underlying error for better clarity
 type PartitionTableCompatibilityError struct {
-	Err error
+	err error
 }
 
 // Returns a formatted error message including the underlying
 // error message
-func (e *PartitionTableCompatibilityError) Error() string {
-	return e.Err.Error()
+func (e PartitionTableCompatibilityError) Error() string {
+	return e.err.Error()
 }
 
-// Unwrap returns the underlying error for error chaining
-func (e *PartitionTableCompatibilityError) Unwrap() error {
-	return e.Err
+// Unwrap returns the original error wrapped inside.
+func (e PartitionTableCompatibilityError) Unwrap() error {
+	return e.err
 }

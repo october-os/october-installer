@@ -20,11 +20,11 @@ func InstallBasicInstallation() error {
 	cpuMicrocode, err := getCpuMicroCode()
 	if err != nil {
 		return CoreInstallError{
-			Err: err,
+			err: err,
 		}
 	} else if cpuMicrocode == "" {
 		return CoreInstallError{
-			Err: errors.New("Unsupported CPU detected. Needs to be an AMD or Intel X86_64 CPU."),
+			err: errors.New("Unsupported CPU detected. Needs to be an AMD or Intel X86_64 CPU."),
 		}
 	}
 
@@ -32,7 +32,7 @@ func InstallBasicInstallation() error {
 
 	if err := cmd.Run(); err != nil {
 		return CoreInstallError{
-			Err: err,
+			err: err,
 		}
 	}
 

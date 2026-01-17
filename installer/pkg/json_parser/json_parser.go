@@ -2,7 +2,6 @@ package json_parser
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/october-os/october-installer/pkg/hostname"
 	"github.com/october-os/october-installer/pkg/locale"
@@ -27,44 +26,36 @@ type Installation struct {
 //
 // Can return errror types:
 // - JsonParsingError
-// - partition.ValidationError
-// - user.NewUserError
-// - mirrors.MirrorListError
-// - timezone.TimezoneError
-// - locale.LocaleGenError
-// - hostname.HostnameError
 func ParseJson(jsonString string) (*Installation, error) {
 	jsonBytes := []byte(jsonString)
 	var installation Installation
 	if err := json.Unmarshal(jsonBytes, &installation); err != nil {
-		return nil, &JsonParsingError{
-			Err: fmt.Errorf("error parsing json: error=%s", err.Error()),
-		}
+		return nil, JsonParsingError{err: err}
 	}
 
 	for _, drive := range installation.Drives {
 		if err := drive.Validate(); err != nil {
-			return nil, err
+			return nil, JsonParsingError{err: err}
 		}
 	}
 	for _, user := range installation.Users {
 		if err := user.Validate(); err != nil {
-			return nil, err
+			return nil, JsonParsingError{err: err}
 		}
 	}
 	for _, country := range installation.MirrorCountries {
 		if err := mirrors.ValidateCountry(country); err != nil {
-			return nil, err
+			return nil, JsonParsingError{err: err}
 		}
 	}
 	if err := timezone.ValidateTimezone(installation.Timezone); err != nil {
-		return nil, err
+		return nil, JsonParsingError{err: err}
 	}
 	if err := locale.ValidateLocale(installation.Locale); err != nil {
-		return nil, err
+		return nil, JsonParsingError{err: err}
 	}
 	if err := hostname.ValidateHostname(installation.Hostname); err != nil {
-		return nil, err
+		return nil, JsonParsingError{err: err}
 	}
 
 	return &installation, nil

@@ -12,11 +12,13 @@ import (
 // installed system. It sets it inside /etc/hostname.
 //
 // Can return errors of types:
-//   - PipeError
-//   - ArchChrootError
+//   - HostnameError
 func SetHostname(hostname string) error {
 	command := fmt.Sprintf("echo %s > /etc/hostname", hostname)
-	return arch_chroot.Run(command)
+	if err := arch_chroot.Run(command); err != nil {
+		return HostnameError{err: err}
+	}
+	return nil
 }
 
 // Checks if the given hostname is RFC1178 complient.
@@ -38,7 +40,7 @@ func ValidateHostname(hostname string) error {
 
 	if !valid {
 		return HostnameError{
-			Err: errors.New("Invalid hostname. Must be RFC1178 complient"),
+			err: errors.New("Invalid hostname. Must be RFC1178 complient"),
 		}
 	}
 

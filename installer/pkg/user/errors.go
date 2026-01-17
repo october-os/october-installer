@@ -15,7 +15,7 @@ func (e NewUserError) Error() string {
 	return fmt.Sprintf("New user error: error=%v", e.err.Error())
 }
 
-// Unwrap unwraps the error inside NewUserError
+// Unwrap returns the original error wrapped inside.
 func (e NewUserError) Unwrap() error {
 	return e.err
 }
