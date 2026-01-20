@@ -212,35 +212,33 @@ func checkAndReversePartitionOrdering(partitions *[]map[Partition]SfdiskJsonPart
 		var tempRoot SfdiskJsonPartition
 
 		for i, partition := range *partitions {
-			switch i {
-			case efiIndex:
-				{
-					for k, m := range partition {
-						if k == *efiPartition {
-							tempEfi = m
-						}
+			if i == efiIndex {
+				for k, m := range partition {
+					if k == *efiPartition {
+						tempEfi = m
 					}
-
-					delete(partition, *efiPartition)
 				}
-			case rootIndex:
-				{
-					for k, m := range partition {
-						if k == *rootPartition {
-							tempRoot = m
-						}
+
+				delete(partition, *efiPartition)
+			}
+
+			if i == rootIndex {
+				for k, m := range partition {
+					if k == *rootPartition {
+						tempRoot = m
 					}
-
-					delete(partition, *rootPartition)
 				}
+
+				delete(partition, *rootPartition)
 			}
 		}
 
 		for i, partition := range *partitions {
-			switch i {
-			case efiIndex:
+			if i == efiIndex {
 				partition[*rootPartition] = tempRoot
-			case rootIndex:
+			}
+
+			if i == rootIndex {
 				partition[*efiPartition] = tempEfi
 			}
 		}
