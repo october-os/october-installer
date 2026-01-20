@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -18,21 +19,14 @@ import (
 )
 
 func main() {
-	cmdArgs := os.Args
-	if len(cmdArgs) == 1 {
-		exitWithErrorCode(core.CoreInstallError{}, "Error: missing arguments")
-	}
+	json := flag.String("json", "", "Installation configuration JSON")
 
+	flag.Parse()
 	var installationConfig *json_parser.Installation
 
-	for _, arg := range cmdArgs[1:] {
-		if arg == "--help" || arg == "-h" {
-			printHelpScreen()
-			os.Exit(0)
-		}
-
+	if *json != "" {
 		var err error
-		installationConfig, err = json_parser.ParseJson(arg)
+		installationConfig, err = json_parser.ParseJson(*json)
 		if err != nil {
 			exitWithErrorCode(err, err.Error())
 		}
@@ -117,16 +111,6 @@ func setTime(tmz string) {
 	if err := timezone.SetHwClock(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
-}
-
-func printHelpScreen() {
-	fmt.Println("October Installer")
-	fmt.Print("Official installer for October Linux.")
-
-	fmt.Println("\n\nUsage:")
-	fmt.Println("\toctober-installer [JSON]")
-
-	fmt.Println("\n--help, -h : Prints this help screen.")
 }
 
 func exitWithErrorCode(e error, m string) {
