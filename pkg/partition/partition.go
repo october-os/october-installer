@@ -187,7 +187,7 @@ func checkAndReversePartitionOrdering(partitions *[]map[Partition]SfdiskJsonPart
 
 	for i, partition := range *partitions {
 		for key, mapping := range partition {
-			switch mapping.Uuid {
+			switch mapping.Type {
 			case gptPartitionTypeEfi:
 				{
 					foundEfi = true
