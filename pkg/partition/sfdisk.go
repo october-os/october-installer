@@ -20,6 +20,7 @@ type SfdiskJsonPartitionTable struct {
 // SfdiskJsonPartition represents one element of the 'partitions' field/array of SfdiskJsonPartitionTable
 type SfdiskJsonPartition struct {
 	Node string `json:"node"`
+	Uuid string `json:"uuid"`
 }
 
 // Gets a drive's state using 'sfdisk --json <device>'
