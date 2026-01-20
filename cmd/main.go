@@ -25,82 +25,133 @@ func main() {
 	var installationConfig *json_parser.Installation
 
 	if *json != "" {
+		fmt.Println("Parsing JSON configuration...")
+
 		var err error
 		installationConfig, err = json_parser.ParseJson(*json)
 		if err != nil {
 			exitWithErrorCode(err, err.Error())
 		}
+
+		fmt.Println("JSON configuration parsed.")
 	}
 
 	preInstallStep(&installationConfig.Drives, &installationConfig.MirrorCountries)
 
+	fmt.Println("Installing core Arch Linux...")
 	if err := core.InstallBasicInstallation(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Core Arch Linux installation finished.")
+	fmt.Println("Setting up timezone...")
+
 	setTime(installationConfig.Timezone)
+
+	fmt.Println("Finished setting up timezone.")
+	fmt.Println("Setting up locales...")
 
 	if err := locale.GenerateLocales(installationConfig.Locale); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Finished setting up locales.")
+	fmt.Println("Setting up hostname...")
+
 	if err := hostname.SetHostname(installationConfig.Hostname); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Finished setting up hostname.")
+
 	postInstallStep(installationConfig.BestEffortGpu)
 
 	userCreation(&installationConfig.Users, installationConfig.RootPassword)
+
+	fmt.Println("October Linux installation done!")
 }
 
 func userCreation(users *[]user.User, rootPassword string) {
 	for _, userToCreate := range *users {
+		fmt.Printf("Creating user %s\n...", userToCreate.Username)
 		if err := user.CreateUser(&userToCreate); err != nil {
 			exitWithErrorCode(err, err.Error())
 		}
+
+		fmt.Println("User created.")
 	}
 
+	fmt.Println("Setting up root password...")
 	if err := user.SetRootPassword(rootPassword); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
+
+	fmt.Println("Finished setting up root password.")
 }
 
 func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
+	fmt.Println("Setting up partitions...")
+
 	if err := partition.SetupPartitions(*drives); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Partition created.")
+	fmt.Println("Setting up mirror list...")
+
 	if err := mirrors.SetMirrorList(*mirrorCountries); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
+
+	fmt.Println("Finished setting up mirror list.")
 }
 
 func postInstallStep(installGpuDrivers bool) {
+	fmt.Println("Enabling multilib repository...")
+
 	if err := postinstall.EnableMultilibRepo(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
+
+	fmt.Println("Multilib repository enabled.")
+	fmt.Println("Installing packages from official repositories...")
 
 	if err := postinstall.InstallOfficialPackages(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Finished installing packages.")
+	fmt.Println("Installing AUR helper and AUR packages...")
+
 	if err := postinstall.InstallAurHelperAndPackages(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Finished installing AUR helper and packages.")
+
 	if installGpuDrivers {
+		fmt.Println("Checking and installing GPU drivers...")
 		if err := postinstall.BestEffortGPUDrivers(); err != nil {
 			exitWithErrorCode(err, err.Error())
 		}
+
+		fmt.Println("GPU drivers installed.")
 	}
+
+	fmt.Println("Setting up sudo...")
 
 	if err := postinstall.SetupSudo(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
+	fmt.Println("Finished setting up sudo.")
+	fmt.Println("Installing grub as bootloader...")
+
 	if err := grub.InstallGrub(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
+
+	fmt.Println("Finished setting grub as bootloader.")
 }
 
 func setTime(tmz string) {
