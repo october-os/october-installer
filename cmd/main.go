@@ -75,7 +75,7 @@ func main() {
 // root password.
 func userCreation(users *[]user.User, rootPassword string) {
 	for _, userToCreate := range *users {
-		fmt.Printf("Creating user %s\n...", userToCreate.Username)
+		fmt.Printf("Creating user %s...\n", userToCreate.Username)
 		if err := user.CreateUser(&userToCreate); err != nil {
 			exitWithErrorCode(err, err.Error())
 		}
