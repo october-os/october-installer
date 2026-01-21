@@ -21,7 +21,7 @@ This part contains all the more "general" configuration of the installation.
 
 | Name | Type | Description | Needed |
 | --- | --- | --- | --- |
-| mirrorCountries | array of strings | Names of the countries you want to use mirrors from. They can be seen on the [Arch Wiki](https://archlinux.org/mirrorlist/all/https/)| Yes |
+| mirrorCountries | array of strings | Names of the countries you want to use mirrors from. They can be seen on the [Arch Wiki](https://archlinux.org/mirrorlist/all/https/).| Yes |
 | timezone | string | The timezone you want the system to be set to. | Yes |
 | locale | string | The locale you want to set on the system. Only UTF-8 locales are supported. | Yes |
 | hostname | string | The hostname of the new system. | Yes |
