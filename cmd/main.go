@@ -7,6 +7,7 @@ import (
 
 	"github.com/october-os/october-installer/pkg/core"
 	"github.com/october-os/october-installer/pkg/error_handler"
+	"github.com/october-os/october-installer/pkg/fstab"
 	"github.com/october-os/october-installer/pkg/grub"
 	"github.com/october-os/october-installer/pkg/hostname"
 	"github.com/october-os/october-installer/pkg/json_parser"
@@ -44,6 +45,12 @@ func main() {
 	}
 
 	fmt.Println("Core Arch Linux installation finished.")
+	fmt.Println("Generating fstab...")
+	if err := fstab.GenerateFstab(); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+
+	fmt.Println("Fstab generated.")
 	fmt.Println("Setting up timezone...")
 
 	setTime(installationConfig.Timezone)
