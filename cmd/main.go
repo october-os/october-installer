@@ -71,6 +71,8 @@ func main() {
 	fmt.Println("October Linux installation done!")
 }
 
+// Creates all the given users and sets the
+// root password.
 func userCreation(users *[]user.User, rootPassword string) {
 	for _, userToCreate := range *users {
 		fmt.Printf("Creating user %s\n...", userToCreate.Username)
@@ -89,6 +91,8 @@ func userCreation(users *[]user.User, rootPassword string) {
 	fmt.Println("Finished setting up root password.")
 }
 
+// Runs all the pre install steps like doing partitions
+// and setting up mirrors.
 func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 	fmt.Println("Setting up partitions...")
 
@@ -106,6 +110,8 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 	fmt.Println("Finished setting up mirror list.")
 }
 
+// Runs all the post install steps like installing
+// packages, GPU drivers etc.
 func postInstallStep(installGpuDrivers bool) {
 	fmt.Println("Enabling multilib repository...")
 
@@ -154,6 +160,8 @@ func postInstallStep(installGpuDrivers bool) {
 	fmt.Println("Finished setting grub as bootloader.")
 }
 
+// Runs the function to set the timezone
+// and sync the hardware clock
 func setTime(tmz string) {
 	if err := timezone.SetTime(tmz); err != nil {
 		exitWithErrorCode(err, err.Error())
@@ -164,6 +172,8 @@ func setTime(tmz string) {
 	}
 }
 
+// Exits the installer with the given exit code
+// and prints the given message in STDERR.
 func exitWithErrorCode(e error, m string) {
 	exit_code := error_handler.GetExitCode(e)
 	fmt.Fprintln(os.Stderr, m)
