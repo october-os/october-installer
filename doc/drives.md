@@ -61,15 +61,16 @@ Command (m for help): w
 
 ## Supported partition types
 
-The installer currently support all the listed partition types below:
+The installer currently support all the listed partition types below. The ones
+in bold are **needed** for the system to be functional.
 
-| Name | GUID |
-| ----- | ---- |
-| EFI | C12A7328-F81F-11D2-BA4B-00A0C93EC93B |
-| SWAP | 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F |
-| Root | 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709 |
-| File System | 0FC63DAF-8483-4772-8E79-3D69D8477DE4 |
-| Home | 933AC7E1-2EB4-4F13-B844-0E14E2AEF915 |
+| Name | GUID | Description |
+| ----- | ---- | ---- |
+| **EFI** | C12A7328-F81F-11D2-BA4B-00A0C93EC93B | Used for the booloader to boot the system. |
+| **SWAP** | 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F | Systems swap space. |
+| **Root** | 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709 | The partition that will have root (/). **Needs to be mounted on /mnt.**|
+| File System | 0FC63DAF-8483-4772-8E79-3D69D8477DE4 | Partition with data on it. |
+| Home | 933AC7E1-2EB4-4F13-B844-0E14E2AEF915 | Optional partition for home directory. |
 
 ## Supported file systems
 
