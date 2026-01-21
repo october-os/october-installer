@@ -2,6 +2,15 @@
 
 Drives contains an array of "drives" and those contain partitions. This section dictates what partitions to create on which drives.
 
+- [Drive configuration example](#Drive-configuration-example)
+- [Supported partition table](#Supported-partition-table)
+- [Supported partition types](#Supported-partition-types)
+- [Supported file systems](#Supported-file-systems)
+- [Drive, partition and size keys](#Drive,-partition-and-size-keys)
+  - [Drive keys](#Drive-keys)
+  - [Partition keys](#Partition-keys)
+  - [Size keys](#Size-keys)
+
 ## Drive configuration example
 
 A basic drive configuration looks like this:
@@ -62,6 +71,12 @@ The installer currently support all the listed partition types below:
 | File System | 0FC63DAF-8483-4772-8E79-3D69D8477DE4 |
 | Home | 933AC7E1-2EB4-4F13-B844-0E14E2AEF915 |
 
+## Supported file systems
+
+The installer currently support two file systems:
+- btrfs
+- ext4
+
 ## Drive, partition and size keys
 
 This is a table of all the keys and descriptions for each of them.
@@ -78,6 +93,8 @@ This is a table of all the keys and descriptions for each of them.
 | --- | --- | --- | --- |
 | size | [object](#Size-keys) | The size of the new partition. | Yes |
 | partitionType | string | The GUID of the partition type. | Yes |
+| fileSystem | string | The partition file system. | If partitionType is not EFI or SWAP. |
+| mountPoint | string | The mount point of the drive | If partitionType is not EFI or SWAP. |
 
 
 ### Size keys
@@ -85,4 +102,4 @@ This is a table of all the keys and descriptions for each of them.
 | --- | --- | --- | --- |
 | amount | integer | The size of the new drive. | If takeRemaining is **false** or **not present**. |
 | unit | string | The unit of the given amount. Units are in *iB (like GiB).| If amount is specified. |
-| takeRemaining | boolean | If true, it will take the remaining space of the drive for this partition. | Needed if no amount is specified. |
+| takeRemaining | boolean | If true, it will take the remaining space of the drive for this partition. | If no amount is specified. |
