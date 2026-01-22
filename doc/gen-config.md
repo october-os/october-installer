@@ -26,4 +26,4 @@ This part contains all the more "general" configuration of the installation.
 | locale | string | The locale you want to set on the system. Only UTF-8 locales are supported. | Yes |
 | hostname | string | The hostname of the new system. | Yes |
 | rootPassword | string | The root password on the new install. | Yes |
-| bestEffortGPU | boolean | If true, it will install the drivers for the systems GPU on the new install. Only Nvidia, AMD and Inte are supported. | Yes |
+| bestEffortGPU | boolean | If true, it will attempt to install the drivers for the systems GPU on the new install. Only Nvidia, AMD and Intel are supported. | Yes |

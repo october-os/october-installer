@@ -39,8 +39,7 @@ A basic drive configuration looks like this:
           "takeRemaining": true
         },
         "partitionType": "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709",
-        "fileSystem": "ext4",
-        "mountPoint": "/mnt"
+        "fileSystem": "ext4"
       }
     ]
   }
@@ -61,14 +60,13 @@ Command (m for help): w
 
 ## Supported partition types
 
-The installer currently support all the listed partition types below. The ones
-in bold are **needed** for the system to be functional.
+The installer currently support all the listed partition types below. The ones with an asterisk are **needed** for the system to be functional.
 
 | Name | GUID | Description |
 | ----- | ---- | ---- |
-| **EFI** | C12A7328-F81F-11D2-BA4B-00A0C93EC93B | Used for the booloader to boot the system. |
-| **SWAP** | 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F | Systems swap space. |
-| **Root** | 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709 | The partition that will have root (/). **Needs to be mounted on /mnt.**|
+| EFI* | C12A7328-F81F-11D2-BA4B-00A0C93EC93B | Used for the booloader to boot the system. |
+| SWAP* | 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F | Systems swap space. |
+| Root* | 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709 | The partition that will have root (/). |
 | File System | 0FC63DAF-8483-4772-8E79-3D69D8477DE4 | Partition with data on it. |
 | Home | 933AC7E1-2EB4-4F13-B844-0E14E2AEF915 | Optional partition for home directory. |
 
@@ -86,7 +84,7 @@ This is a table of all the keys and descriptions for each of them.
 | Name | type | Description | Needed |
 | --- | --- | --- | --- |
 | path | string | The absolute path to the drive. | Yes |
-| append | boolean | Will the new partitions be appended to the drive. | Yes |
+| append | boolean | Whether the new partitions will be appended to the existing partition table or replace it. | Yes |
 | partitions | array of [objects](#Partition-keys) | Array of all the partitions that need to be created. | Yes |
 
 ### Partition keys 
@@ -95,7 +93,7 @@ This is a table of all the keys and descriptions for each of them.
 | size | [object](#Size-keys) | The size of the new partition. | Yes |
 | partitionType | string | The GUID of the partition type. | Yes |
 | fileSystem | string | The partition file system. | If partitionType is not EFI or SWAP. |
-| mountPoint | string | The mount point of the drive | If partitionType is not EFI or SWAP. |
+| mountPoint | string | The mount point of the drive | If partitionType is not EFI, SWAP or Root. |
 
 
 ### Size keys
