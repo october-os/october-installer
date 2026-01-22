@@ -23,6 +23,8 @@ func SetupPartitions(drives []Drive) error {
 		return PartitionError{err: err}
 	}
 
+	checkAndReversePartitionOrdering(&newPartitionsMappings)
+
 	for _, mapping := range newPartitionsMappings {
 		for partition, sfdiskPartition := range mapping {
 			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
@@ -170,4 +172,75 @@ func mountPartition(partition Partition, path string) error {
 	}
 
 	return nil
+}
+
+// Checks if EFI and root partition are reversed and switches them in place
+// if it is the case.
+func checkAndReversePartitionOrdering(partitions *[]map[Partition]SfdiskJsonPartition) {
+	foundEfi := false
+	partitionsReversed := false
+
+	var efiPartition *Partition
+	var rootPartition *Partition
+	var rootIndex int
+	var efiIndex int
+
+	for i, partition := range *partitions {
+		for key, mapping := range partition {
+			switch mapping.Type {
+			case gptPartitionTypeEfi:
+				{
+					foundEfi = true
+					efiPartition = &key
+					efiIndex = i
+				}
+			case gptPartitionTypeRoot:
+				{
+					rootPartition = &key
+
+					if foundEfi {
+						partitionsReversed = true
+						rootIndex = i
+					}
+				}
+			}
+		}
+	}
+
+	if partitionsReversed {
+		var tempEfi SfdiskJsonPartition
+		var tempRoot SfdiskJsonPartition
+
+		for i, partition := range *partitions {
+			if i == efiIndex {
+				for k, m := range partition {
+					if k == *efiPartition {
+						tempEfi = m
+					}
+				}
+
+				delete(partition, *efiPartition)
+			}
+
+			if i == rootIndex {
+				for k, m := range partition {
+					if k == *rootPartition {
+						tempRoot = m
+					}
+				}
+
+				delete(partition, *rootPartition)
+			}
+		}
+
+		for i, partition := range *partitions {
+			if i == efiIndex {
+				partition[*rootPartition] = tempRoot
+			}
+
+			if i == rootIndex {
+				partition[*efiPartition] = tempEfi
+			}
+		}
+	}
 }

@@ -175,7 +175,7 @@ func (p *Partition) Validate() error {
 	}
 
 	if p.MountPoint == "" {
-		if p.PartitionType == gptPartitionTypeEfi || p.PartitionType == gptPartitionTypeSwap || p.PartitionType == gptPartitionTypeRoot {
+		if p.PartitionType != gptPartitionTypeEfi && p.PartitionType != gptPartitionTypeSwap && p.PartitionType != gptPartitionTypeRoot {
 			return PartitionError{
 				err: errors.New("Partition validation: error=MountPoint is not defined, but the partition type needs a mount point"),
 			}

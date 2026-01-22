@@ -20,6 +20,7 @@ type Installation struct {
 	Locale          string            `json:"locale"`
 	Hostname        string            `json:"hostname"`
 	RootPassword    string            `json:"rootPassword"`
+	BestEffortGpu   bool              `json:"bestEffortGpu"`
 }
 
 // Parses an installation JSON and validates it
