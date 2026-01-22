@@ -28,9 +28,7 @@ func (u *User) Validate() error {
 		}
 	}
 
-	if strings.TrimSpace(u.Homepath) == "" {
-		u.Homepath = fmt.Sprintf("/home/%s", u.Username)
-	} else if !strings.HasPrefix(u.Homepath, "/") {
+	if u.Homepath != "" && !strings.HasPrefix(u.Homepath, "/") {
 		return NewUserError{
 			err: errors.New("Provide a valid directory for user home path"),
 		}
@@ -65,7 +63,6 @@ func CreateUser(user *User) error {
 	}
 
 	if user.Sudoer {
-
 		if err := addToSudoer(user.Username); err != nil {
 			return NewUserError{err: err}
 		}
@@ -84,6 +81,10 @@ func addToSudoer(username string) error {
 // Runs useradd with the given username and homepath inside the newly
 // installed system.
 func userAdd(username, homepath string) error {
+	if homepath == "" {
+		homepath = fmt.Sprintf("/home/%s", username)
+	}
+
 	createCommand := fmt.Sprintf("useradd -m %s -d %s", username, homepath)
 	return arch_chroot.Run(createCommand)
 }

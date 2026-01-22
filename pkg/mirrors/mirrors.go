@@ -39,7 +39,7 @@ func SetMirrorList(countries []string) error {
 // Can return errors of types:
 //   - MirrorListError
 func ValidateCountry(country string) error {
-	command := fmt.Sprintf("cat %s | grep %s", mirrorlistFile, country)
+	command := fmt.Sprintf("cat %s | grep \"%s\"", mirrorlistFile, country)
 	cmd := exec.Command("/bin/bash", "-c", command)
 
 	if err := cmd.Run(); err != nil {

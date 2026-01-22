@@ -5,6 +5,7 @@ import (
 
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 	"github.com/october-os/october-installer/pkg/core"
+	"github.com/october-os/october-installer/pkg/fstab"
 	"github.com/october-os/october-installer/pkg/grub"
 	"github.com/october-os/october-installer/pkg/hostname"
 	"github.com/october-os/october-installer/pkg/locale"
@@ -28,6 +29,7 @@ func GetExitCode(e error) int {
 		postInstallErr postinstall.PostInstallError
 		timezoneErr    timezone.TimezoneError
 		newUserErr     user.NewUserError
+		fstabError     fstab.FstabError
 	)
 
 	switch {
@@ -51,6 +53,8 @@ func GetExitCode(e error) int {
 		return 9
 	case errors.As(e, &newUserErr):
 		return 10
+	case errors.As(e, &fstabError):
+		return 11
 	default:
 		return 67
 	}

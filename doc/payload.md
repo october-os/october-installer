@@ -1,4 +1,4 @@
-# JSON payload for main parser
+# JSON payload structure
 
 ```json
 {
