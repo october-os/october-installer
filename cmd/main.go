@@ -121,7 +121,7 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 // packages, GPU drivers etc.
 func postInstallStep(installGpuDrivers bool) {
 	fmt.Println("Copying os-release (branding)...")
-	if err := postinstall.CopyOsRelease(); err != nil {
+	if err := postinstall.SetupBranding(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
