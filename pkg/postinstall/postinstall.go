@@ -108,7 +108,7 @@ func SetupBranding() error {
 		return PostInstallError{err: err}
 	}
 
-	isoFile, err = os.Open("/etc/lsb-release")
+	isoFile, err = os.Open("/etc/lsb-release-custom")
 	if err != nil {
 		return PostInstallError{err: err}
 	}
