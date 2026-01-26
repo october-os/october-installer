@@ -120,12 +120,12 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 // Runs all the post install steps like installing
 // packages, GPU drivers etc.
 func postInstallStep(installGpuDrivers bool) {
-	fmt.Println("Copying os-release (branding)...")
+	fmt.Println("Setting up branding...")
 	if err := postinstall.SetupBranding(); err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
 
-	fmt.Println("Copied os-release.")
+	fmt.Println("Branding set up.")
 	fmt.Println("Enabling multilib repository...")
 
 	if err := postinstall.EnableMultilibRepo(); err != nil {
