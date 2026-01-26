@@ -90,17 +90,29 @@ func SetupSudo() error {
 	return nil
 }
 
-// Copies the os-release file from the ISO to the installed system
+// Copies the /etc/os-release and /etc/lsb-release files from the ISO to the installed system
 // for branding purposes.
 //
 // Can return errors of types:
 //   - PostInstallError
-func CopyOsRelease() error {
+func SetupBranding() error {
 	isoFile, err := os.Open("/etc/os-release")
 	if err != nil {
 		return PostInstallError{err: err}
 	}
 	systemFile, err := os.Create("/mnt/etc/os-release")
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+	if _, err := io.Copy(systemFile, isoFile); err != nil {
+		return PostInstallError{err: err}
+	}
+
+	isoFile, err = os.Open("/etc/lsb-release")
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+	systemFile, err = os.Create("/etc/lsb-release")
 	if err != nil {
 		return PostInstallError{err: err}
 	}
