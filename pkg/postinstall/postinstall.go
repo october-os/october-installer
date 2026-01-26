@@ -112,7 +112,7 @@ func SetupBranding() error {
 	if err != nil {
 		return PostInstallError{err: err}
 	}
-	systemFile, err = os.Create("/etc/lsb-release")
+	systemFile, err = os.Create("/mnt/etc/lsb-release")
 	if err != nil {
 		return PostInstallError{err: err}
 	}
