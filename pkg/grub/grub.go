@@ -28,6 +28,10 @@ func InstallGrub() error {
 		return GrubError{err: err}
 	}
 
+	if err := setUpBranding(); err != nil {
+		return GrubError{err: err}
+	}
+
 	if err := updateGrubConfig(); err != nil {
 		return GrubError{err: err}
 	}
@@ -52,6 +56,11 @@ func setUpOsProber() error {
 	osProberCommand := "os-prober"
 	command := fmt.Sprintf("%s && %s", sedCommand, osProberCommand)
 	return arch_chroot.Run(command)
+}
+
+func setUpBranding() error {
+	sedCommand := "sed -i 's/GRUB_DISTRIBUTOR=\"Arch\"/GRUB_DISTRIBUTOR=\"October\"/' /etc/default/grub"
+	return arch_chroot.Run(sedCommand)
 }
 
 // Runs the Grub installation on the new system.
