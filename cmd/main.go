@@ -107,7 +107,7 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 		exitWithErrorCode(err, err.Error())
 	}
 
-	fmt.Println("Partition created.")
+	fmt.Println("Partitions created.")
 	fmt.Println("Setting up mirror list...")
 
 	if err := mirrors.SetMirrorList(*mirrorCountries); err != nil {
