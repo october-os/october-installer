@@ -21,8 +21,12 @@ import (
 
 func main() {
 	json := flag.String("json", "", "Installation configuration JSON")
-
 	flag.Parse()
+	if *json == "" || json == nil {
+		fmt.Println("Missing 'json' arg.")
+		os.Exit(1)
+	}
+
 	var installationConfig *json_parser.Installation
 
 	if *json != "" {
