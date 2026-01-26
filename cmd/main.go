@@ -107,7 +107,7 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 		exitWithErrorCode(err, err.Error())
 	}
 
-	fmt.Println("Partition created.")
+	fmt.Println("Partitions created.")
 	fmt.Println("Setting up mirror list...")
 
 	if err := mirrors.SetMirrorList(*mirrorCountries); err != nil {
@@ -120,6 +120,12 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 // Runs all the post install steps like installing
 // packages, GPU drivers etc.
 func postInstallStep(installGpuDrivers bool) {
+	fmt.Println("Setting up branding...")
+	if err := postinstall.SetupBranding(); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+
+	fmt.Println("Branding set up.")
 	fmt.Println("Enabling multilib repository...")
 
 	if err := postinstall.EnableMultilibRepo(); err != nil {

@@ -1,6 +1,11 @@
 package postinstall
 
-import "github.com/october-os/october-installer/pkg/arch_chroot"
+import (
+	"io"
+	"os"
+
+	"github.com/october-os/october-installer/pkg/arch_chroot"
+)
 
 // Gets the list of packages that need to be installed
 // with pacman, installs them, then configure them
@@ -79,6 +84,39 @@ func EnableMultilibRepo() error {
 //   - PostInstallError
 func SetupSudo() error {
 	if err := addWheelGroup(); err != nil {
+		return PostInstallError{err: err}
+	}
+
+	return nil
+}
+
+// Copies the /etc/os-release and /etc/lsb-release files from the ISO to the installed system
+// for branding purposes.
+//
+// Can return errors of types:
+//   - PostInstallError
+func SetupBranding() error {
+	isoFile, err := os.Open("/etc/os-release")
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+	systemFile, err := os.Create("/mnt/etc/os-release")
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+	if _, err := io.Copy(systemFile, isoFile); err != nil {
+		return PostInstallError{err: err}
+	}
+
+	isoFile, err = os.Open("/etc/lsb-release-custom")
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+	systemFile, err = os.Create("/mnt/etc/lsb-release")
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+	if _, err := io.Copy(systemFile, isoFile); err != nil {
 		return PostInstallError{err: err}
 	}
 
