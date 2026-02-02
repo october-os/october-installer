@@ -21,25 +21,36 @@ import (
 
 func main() {
 	json := flag.String("json", "", "Installation configuration JSON")
+	json_file := flag.String("json-file", "", "Installation configuration JSON file")
+
 	flag.Parse()
-	if *json == "" || json == nil {
-		fmt.Println("Missing 'json' arg.")
+	if (*json == "" || json == nil) && (*json_file == "" || json_file == nil) {
+		fmt.Println("Missing 'json' or 'json-file' arg.")
 		os.Exit(1)
 	}
 
 	var installationConfig *json_parser.Installation
+	var err error
 
+	fmt.Println("Parsing JSON configuration...")
 	if *json != "" {
-		fmt.Println("Parsing JSON configuration...")
-
-		var err error
 		installationConfig, err = json_parser.ParseJson(*json)
 		if err != nil {
 			exitWithErrorCode(err, err.Error())
 		}
+	} else if *json_file != "" {
+		content, err := os.ReadFile(*json_file)
+		if err != nil {
+			exitWithErrorCode(err, err.Error())
+		}
 
-		fmt.Println("JSON configuration parsed.")
+		installationConfig, err = json_parser.ParseJson(string(content))
+		if err != nil {
+			exitWithErrorCode(err, err.Error())
+		}
 	}
+
+	fmt.Println("JSON configuration parsed.")
 
 	preInstallStep(&installationConfig.Drives, &installationConfig.MirrorCountries)
 
