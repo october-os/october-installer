@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -21,25 +22,18 @@ import (
 
 func main() {
 	json := flag.String("json", "", "Installation configuration JSON")
+	json_file := flag.String("json-file", "", "Installation configuration JSON file")
+
 	flag.Parse()
-	if *json == "" || json == nil {
-		fmt.Println("Missing 'json' arg.")
-		os.Exit(1)
+
+	fmt.Println("Parsing JSON configuration...")
+
+	installationConfig, err := getInstallConfiguration(json, json_file)
+	if err != nil {
+		exitWithErrorCode(err, err.Error())
 	}
 
-	var installationConfig *json_parser.Installation
-
-	if *json != "" {
-		fmt.Println("Parsing JSON configuration...")
-
-		var err error
-		installationConfig, err = json_parser.ParseJson(*json)
-		if err != nil {
-			exitWithErrorCode(err, err.Error())
-		}
-
-		fmt.Println("JSON configuration parsed.")
-	}
+	fmt.Println("JSON configuration parsed.")
 
 	preInstallStep(&installationConfig.Drives, &installationConfig.MirrorCountries)
 
@@ -80,6 +74,36 @@ func main() {
 	userCreation(&installationConfig.Users, installationConfig.RootPassword)
 
 	fmt.Println("October Linux installation done!")
+}
+
+// Takes the inputs from the -json and -json-file flags and returns the
+// installation configuration after being parsed or an error.
+func getInstallConfiguration(json, json_file *string) (*json_parser.Installation, error) {
+	if (*json == "" || json == nil) && (*json_file == "" || json_file == nil) {
+		return nil, errors.New("Missing 'json' or 'json-file' arg.")
+	}
+
+	var installationConfig *json_parser.Installation
+	var err error
+
+	if *json != "" {
+		installationConfig, err = json_parser.ParseJson(*json)
+		if err != nil {
+			return nil, err
+		}
+	} else if *json_file != "" {
+		content, err := os.ReadFile(*json_file)
+		if err != nil {
+			return nil, err
+		}
+
+		installationConfig, err = json_parser.ParseJson(string(content))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return installationConfig, nil
 }
 
 // Creates all the given users and sets the
