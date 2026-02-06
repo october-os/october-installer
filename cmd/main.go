@@ -12,6 +12,7 @@ import (
 	"github.com/october-os/october-installer/pkg/grub"
 	"github.com/october-os/october-installer/pkg/hostname"
 	"github.com/october-os/october-installer/pkg/json_parser"
+	"github.com/october-os/october-installer/pkg/keyring"
 	"github.com/october-os/october-installer/pkg/locale"
 	"github.com/october-os/october-installer/pkg/mirrors"
 	"github.com/october-os/october-installer/pkg/partition"
@@ -129,6 +130,13 @@ func userCreation(users *[]user.User, rootPassword string) {
 // Runs all the pre install steps like doing partitions
 // and setting up mirrors.
 func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
+	fmt.Println("Updating keyring...")
+
+	if err := keyring.UpdateKeyRing(); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+
+	fmt.Println("Keyring updated.")
 	fmt.Println("Setting up partitions...")
 
 	if err := partition.SetupPartitions(*drives); err != nil {
