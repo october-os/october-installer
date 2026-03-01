@@ -169,6 +169,16 @@ func postInstallStep(installGpuDrivers bool, users []user.User) {
 	}
 
 	fmt.Println("Multilib repository enabled.")
+
+	if installGpuDrivers {
+		fmt.Println("Checking and installing GPU drivers...")
+		if err := postinstall.BestEffortGPUDrivers(); err != nil {
+			exitWithErrorCode(err, err.Error())
+		}
+
+		fmt.Println("GPU drivers installed.")
+	}
+
 	fmt.Println("Installing packages from official repositories...")
 
 	if err := postinstall.InstallOfficialPackages(); err != nil {
@@ -183,15 +193,6 @@ func postInstallStep(installGpuDrivers bool, users []user.User) {
 	}
 
 	fmt.Println("Finished installing AUR helper and packages.")
-
-	if installGpuDrivers {
-		fmt.Println("Checking and installing GPU drivers...")
-		if err := postinstall.BestEffortGPUDrivers(); err != nil {
-			exitWithErrorCode(err, err.Error())
-		}
-
-		fmt.Println("GPU drivers installed.")
-	}
 
 	fmt.Println("Setting up sudo...")
 
