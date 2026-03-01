@@ -70,7 +70,7 @@ func main() {
 
 	fmt.Println("Finished setting up hostname.")
 
-	postInstallStep(installationConfig.BestEffortGpu)
+	postInstallStep(installationConfig.BestEffortGpu, installationConfig.Users)
 
 	userCreation(&installationConfig.Users, installationConfig.RootPassword)
 
@@ -155,7 +155,7 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 
 // Runs all the post install steps like installing
 // packages, GPU drivers etc.
-func postInstallStep(installGpuDrivers bool) {
+func postInstallStep(installGpuDrivers bool, users []user.User) {
 	fmt.Println("Setting up branding...")
 	if err := postinstall.SetupBranding(); err != nil {
 		exitWithErrorCode(err, err.Error())
@@ -207,6 +207,13 @@ func postInstallStep(installGpuDrivers bool) {
 	}
 
 	fmt.Println("Finished setting grub as bootloader.")
+	fmt.Println("Installing October Linux configuration for all users...")
+
+	if err := postinstall.AddConfigForUsers(users); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+
+	fmt.Println("Finished installing configuration for all users.")
 }
 
 // Runs the function to set the timezone
