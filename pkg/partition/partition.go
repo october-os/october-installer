@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 )
 
 // Sets up the partitions for a list of Drive:
@@ -15,6 +16,8 @@ import (
 //
 // Can return one type of error: PartitionError
 func SetupPartitions(drives []Drive) error {
+	cleanUpMounts()
+
 	if err := checkCompatibility(drives); err != nil {
 		return PartitionError{err: err}
 	}
@@ -22,8 +25,6 @@ func SetupPartitions(drives []Drive) error {
 	if err != nil {
 		return PartitionError{err: err}
 	}
-
-	checkAndReversePartitionOrdering(&newPartitionsMappings)
 
 	for _, mapping := range newPartitionsMappings {
 		for partition, sfdiskPartition := range mapping {
@@ -162,85 +163,16 @@ func formatPartition(partition Partition, path string) error {
 
 // Mounts a partition
 func mountPartition(partition Partition, path string) error {
-	cmd, err := partition.mountCommand(path)
+	err := partition.mount(path)
 	if err != nil {
-		return err
-	}
-
-	if err := cmd.Run(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// Checks if EFI and root partition are reversed and switches them in place
-// if it is the case.
-func checkAndReversePartitionOrdering(partitions *[]map[Partition]SfdiskJsonPartition) {
-	foundEfi := false
-	partitionsReversed := false
-
-	var efiPartition *Partition
-	var rootPartition *Partition
-	var rootIndex int
-	var efiIndex int
-
-	for i, partition := range *partitions {
-		for key, mapping := range partition {
-			switch mapping.Type {
-			case gptPartitionTypeEfi:
-				{
-					foundEfi = true
-					efiPartition = &key
-					efiIndex = i
-				}
-			case gptPartitionTypeRoot:
-				{
-					rootPartition = &key
-
-					if foundEfi {
-						partitionsReversed = true
-						rootIndex = i
-					}
-				}
-			}
-		}
-	}
-
-	if partitionsReversed {
-		var tempEfi SfdiskJsonPartition
-		var tempRoot SfdiskJsonPartition
-
-		for i, partition := range *partitions {
-			if i == efiIndex {
-				for k, m := range partition {
-					if k == *efiPartition {
-						tempEfi = m
-					}
-				}
-
-				delete(partition, *efiPartition)
-			}
-
-			if i == rootIndex {
-				for k, m := range partition {
-					if k == *rootPartition {
-						tempRoot = m
-					}
-				}
-
-				delete(partition, *rootPartition)
-			}
-		}
-
-		for i, partition := range *partitions {
-			if i == efiIndex {
-				partition[*rootPartition] = tempRoot
-			}
-
-			if i == rootIndex {
-				partition[*efiPartition] = tempEfi
-			}
-		}
-	}
+func cleanUpMounts() {
+	syscall.Unmount("/mnt/boot/efi", syscall.MNT_DETACH)
+	syscall.Unmount("/mnt/boot", syscall.MNT_DETACH)
+	syscall.Unmount("/mnt", syscall.MNT_DETACH)
 }
