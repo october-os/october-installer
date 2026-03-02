@@ -22,15 +22,32 @@ func AddConfigForUsers(users []user.User) error {
 		}
 	}
 
+	if err := removeTemp(); err != nil {
+		return PostInstallError{
+			err: err,
+		}
+	}
+
+	if err := setupGreetd(); err != nil {
+		return PostInstallError{
+			err: err,
+		}
+	}
+
 	return nil
 }
 
 func setupConfigForUsers(users []user.User) error {
 	for _, u := range users {
-		createDirCmd := fmt.Sprintf("mkdir %s/.config", u.Homepath)
-		copyCmd := fmt.Sprintf("cp /tmp/october-config %s/.config", u.Homepath)
+		if u.Homepath == "" {
+			u.Homepath = fmt.Sprintf("/home/%s", u.Username)
+		}
+
+		// Creating the whole path since we need those folders
+		createDirCmd := fmt.Sprintf("mkdir -p %s/.config/wal/templates", u.Homepath)
+		copyCmd := fmt.Sprintf("cp -r /october-temp/october-config %s/.config", u.Homepath)
 		chownCmd := fmt.Sprintf("chown -R %s:%s %s/.config", u.Username, u.Username, u.Homepath)
-		runSetup := fmt.Sprintf("sudo -u %s %s/.config/october-config/scripts/setup.sh", u.Username, u.Homepath)
+		runSetup := fmt.Sprintf("sudo -u %s ./%s/.config/october-config/scripts/setup.sh", u.Username, u.Homepath)
 
 		cmd := fmt.Sprintf("%s && %s && %s && %s", createDirCmd, copyCmd, chownCmd, runSetup)
 
@@ -42,8 +59,21 @@ func setupConfigForUsers(users []user.User) error {
 	return nil
 }
 
+func setupGreetd() error {
+	cmd := "sed -i 's/command = \"agreety --cmd $SHELL\"/command = \"tuigreet --cmd start-hyprland\"/' /etc/greetd/config.toml"
+	return arch_chroot.Run(cmd)
+}
+
+func removeTemp() error {
+	cmd := "rm -rf /october-temp"
+	return arch_chroot.Run(cmd)
+}
+
 func cloneRepoToTemp() error {
-	cmd := fmt.Sprintf("git clone %s /tmp/october-config", octoberConfigRepo)
+	createTmpFolder := "mkdir /october-temp"
+	cloneRepo := fmt.Sprintf("git clone %s /october-temp/october-config", octoberConfigRepo)
+
+	cmd := fmt.Sprintf("%s && %s", createTmpFolder, cloneRepo)
 
 	return arch_chroot.Run(cmd)
 }

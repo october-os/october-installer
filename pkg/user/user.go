@@ -54,7 +54,7 @@ func SetRootPassword(password string) error {
 // Errors that can be returned:
 //   - NewUserError
 func CreateUser(user *User) error {
-	if err := userAdd(user.Username, user.Homepath); err != nil {
+	if err := userAdd(user); err != nil {
 		return NewUserError{err: err}
 	}
 
@@ -80,12 +80,12 @@ func addToSudoer(username string) error {
 
 // Runs useradd with the given username and homepath inside the newly
 // installed system.
-func userAdd(username, homepath string) error {
-	if homepath == "" {
-		homepath = fmt.Sprintf("/home/%s", username)
+func userAdd(user *User) error {
+	if user.Homepath == "" {
+		user.Homepath = fmt.Sprintf("/home/%s", user.Username)
 	}
 
-	createCommand := fmt.Sprintf("useradd -m %s -d %s", username, homepath)
+	createCommand := fmt.Sprintf("useradd -m %s -d %s", user.Username, user.Homepath)
 	return arch_chroot.Run(createCommand)
 }
 

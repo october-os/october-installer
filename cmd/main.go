@@ -70,9 +70,9 @@ func main() {
 
 	fmt.Println("Finished setting up hostname.")
 
-	postInstallStep(installationConfig.BestEffortGpu, installationConfig.Users)
-
 	userCreation(&installationConfig.Users, installationConfig.RootPassword)
+
+	postInstallStep(installationConfig.BestEffortGpu, installationConfig.Users)
 
 	fmt.Println("October Linux installation done!")
 }
