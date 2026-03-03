@@ -9,6 +9,11 @@ import (
 
 const octoberConfigRepo string = "https://github.com/october-os/october-config.git"
 
+// Clones the github repo of october-config and installs
+// it for each user.
+//
+// Can return errors of type :
+//   - PostInstallError
 func AddConfigForUsers(users []user.User) error {
 	if err := cloneRepoToTemp(); err != nil {
 		return PostInstallError{
@@ -37,6 +42,8 @@ func AddConfigForUsers(users []user.User) error {
 	return nil
 }
 
+// Goes through all the users and configures
+// the config for each user.
 func setupConfigForUsers(users []user.User) error {
 	for _, u := range users {
 		if u.Homepath == "" {
@@ -68,16 +75,19 @@ func setupConfigForUsers(users []user.User) error {
 	return nil
 }
 
+// Sets up greetd with tuigreet using sed.
 func setupGreetd() error {
 	cmd := "sed -i 's/command = \"agreety --cmd \\/bin\\/sh\"/command = \"tuigreet --cmd start-hyprland\"/' /etc/greetd/config.toml"
 	return arch_chroot.Run(cmd)
 }
 
+// Deletes /october-temp from newly installed system.
 func removeTemp() error {
 	cmd := "rm -rf /october-temp"
 	return arch_chroot.Run(cmd)
 }
 
+// Creates directory and clones the repo to /october-temp.
 func cloneRepoToTemp() error {
 	createTmpFolder := "mkdir /october-temp"
 	cloneRepo := fmt.Sprintf("git clone %s /october-temp/october-config", octoberConfigRepo)
