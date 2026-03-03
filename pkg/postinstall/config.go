@@ -43,14 +43,23 @@ func setupConfigForUsers(users []user.User) error {
 			u.Homepath = fmt.Sprintf("/home/%s", u.Username)
 		}
 
+		octoberConfigDir := fmt.Sprintf("%s/.config/october-config", u.Homepath)
+
 		// Creating the whole path since we need those folders
 		createDirCmd := fmt.Sprintf("mkdir -p %s/.config/wal/templates", u.Homepath)
 		copyCmd := fmt.Sprintf("cp -r /october-temp/october-config %s/.config", u.Homepath)
 		chownCmd := fmt.Sprintf("chown -R %s:%s %s/.config", u.Username, u.Username, u.Homepath)
-		runSetup := fmt.Sprintf("sudo -u %s ./%s/.config/october-config/scripts/setup.sh", u.Username, u.Homepath)
+		runSetup := fmt.Sprintf("sudo -u %s %s/scripts/setup.sh", u.Username, octoberConfigDir)
 
 		cmd := fmt.Sprintf("%s && %s && %s && %s", createDirCmd, copyCmd, chownCmd, runSetup)
 
+		if err := arch_chroot.Run(cmd); err != nil {
+			return err
+		}
+
+		copyHyprPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/colors.conf %s/hypr/base", u.Username, octoberConfigDir, octoberConfigDir)
+		copyQuickshellPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/Theme.qml %s/quickshell/theme", u.Username, octoberConfigDir, octoberConfigDir)
+		cmd = fmt.Sprintf("%s && %s", copyHyprPreRender, copyQuickshellPreRender)
 		if err := arch_chroot.Run(cmd); err != nil {
 			return err
 		}
@@ -60,7 +69,7 @@ func setupConfigForUsers(users []user.User) error {
 }
 
 func setupGreetd() error {
-	cmd := "sed -i 's/command = \"agreety --cmd $SHELL\"/command = \"tuigreet --cmd start-hyprland\"/' /etc/greetd/config.toml"
+	cmd := "sed -i 's/command = \"agreety --cmd \\/bin\\/sh\"/command = \"tuigreet --cmd start-hyprland\"/' /etc/greetd/config.toml"
 	return arch_chroot.Run(cmd)
 }
 
