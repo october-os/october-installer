@@ -57,6 +57,7 @@ func SetupPartitions(drives []Drive) error {
 				if err = mountPartition(p, sfdiskPartition.Node); err != nil {
 					return PartitionError{err: err}
 				}
+				break
 			}
 		}
 	}
