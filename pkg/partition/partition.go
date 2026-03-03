@@ -26,13 +26,37 @@ func SetupPartitions(drives []Drive) error {
 		return PartitionError{err: err}
 	}
 
-	for _, mapping := range newPartitionsMappings {
+	rootFound := false
+	efiFoundBeforeRoot := false
+	var efiPartition int
+	for i, mapping := range newPartitionsMappings {
 		for partition, sfdiskPartition := range mapping {
+			if partition.PartitionType == gptPartitionTypeEfi && !rootFound {
+				efiFoundBeforeRoot = true
+				efiPartition = i
+				continue
+			} else if partition.PartitionType == gptPartitionTypeRoot {
+				rootFound = true
+			}
+
 			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
 				return PartitionError{err: err}
 			}
 			if err = mountPartition(partition, sfdiskPartition.Node); err != nil {
 				return PartitionError{err: err}
+			}
+		}
+	}
+
+	if efiFoundBeforeRoot {
+		for p, sfdiskPartition := range newPartitionsMappings[efiPartition] {
+			if p.PartitionType == gptPartitionTypeEfi {
+				if err = formatPartition(p, sfdiskPartition.Node); err != nil {
+					return PartitionError{err: err}
+				}
+				if err = mountPartition(p, sfdiskPartition.Node); err != nil {
+					return PartitionError{err: err}
+				}
 			}
 		}
 	}
@@ -172,7 +196,6 @@ func mountPartition(partition Partition, path string) error {
 }
 
 func cleanUpMounts() {
-	syscall.Unmount("/mnt/boot/efi", syscall.MNT_DETACH)
 	syscall.Unmount("/mnt/boot", syscall.MNT_DETACH)
 	syscall.Unmount("/mnt", syscall.MNT_DETACH)
 }
