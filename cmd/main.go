@@ -70,9 +70,9 @@ func main() {
 
 	fmt.Println("Finished setting up hostname.")
 
-	postInstallStep(installationConfig.BestEffortGpu)
-
 	userCreation(&installationConfig.Users, installationConfig.RootPassword)
+
+	postInstallStep(installationConfig.BestEffortGpu, installationConfig.Users)
 
 	fmt.Println("October Linux installation done!")
 }
@@ -155,7 +155,7 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 
 // Runs all the post install steps like installing
 // packages, GPU drivers etc.
-func postInstallStep(installGpuDrivers bool) {
+func postInstallStep(installGpuDrivers bool, users []user.User) {
 	fmt.Println("Setting up branding...")
 	if err := postinstall.SetupBranding(); err != nil {
 		exitWithErrorCode(err, err.Error())
@@ -169,6 +169,16 @@ func postInstallStep(installGpuDrivers bool) {
 	}
 
 	fmt.Println("Multilib repository enabled.")
+
+	if installGpuDrivers {
+		fmt.Println("Checking and installing GPU drivers...")
+		if err := postinstall.BestEffortGPUDrivers(); err != nil {
+			exitWithErrorCode(err, err.Error())
+		}
+
+		fmt.Println("GPU drivers installed.")
+	}
+
 	fmt.Println("Installing packages from official repositories...")
 
 	if err := postinstall.InstallOfficialPackages(); err != nil {
@@ -184,15 +194,6 @@ func postInstallStep(installGpuDrivers bool) {
 
 	fmt.Println("Finished installing AUR helper and packages.")
 
-	if installGpuDrivers {
-		fmt.Println("Checking and installing GPU drivers...")
-		if err := postinstall.BestEffortGPUDrivers(); err != nil {
-			exitWithErrorCode(err, err.Error())
-		}
-
-		fmt.Println("GPU drivers installed.")
-	}
-
 	fmt.Println("Setting up sudo...")
 
 	if err := postinstall.SetupSudo(); err != nil {
@@ -207,6 +208,13 @@ func postInstallStep(installGpuDrivers bool) {
 	}
 
 	fmt.Println("Finished setting grub as bootloader.")
+	fmt.Println("Installing October Linux configuration for all users...")
+
+	if err := postinstall.AddConfigForUsers(users); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+
+	fmt.Println("Finished installing configuration for all users.")
 }
 
 // Runs the function to set the timezone

@@ -3,9 +3,11 @@ package partition
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"slices"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -128,19 +130,24 @@ func (p *Partition) formatCommand(path string) (*exec.Cmd, error) {
 }
 
 // Returns the command that can be used to mount the partition
-func (p *Partition) mountCommand(path string) (*exec.Cmd, error) {
+func (p *Partition) mount(path string) error {
 	switch p.PartitionType {
 	case gptPartitionTypeEfi:
-		return exec.Command("mount", "--mkdir", path, "/mnt/boot"), nil
+		if err := os.MkdirAll("/mnt/boot", 0755); err != nil {
+			return fmt.Errorf("mkdir /mnt/boot %s", err.Error())
+		}
+
+		return syscall.Mount(path, "/mnt/boot", "vfat", 0, "")
 	case gptPartitionTypeSwap:
-		return exec.Command("swapon", path), nil
+		cmd := exec.Command("swapon", path)
+		return cmd.Run()
 	case gptPartitionTypeRoot:
-		return exec.Command("mount", path, "/mnt"), nil
+		return syscall.Mount(path, "/mnt", p.FileSystem, 0, "")
 	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
-		return exec.Command("mount", "--mkdir", path, p.MountPoint), nil
+		return syscall.Mount(path, p.MountPoint, p.FileSystem, 0, "")
 	}
 
-	return nil, errors.New("error choosing a mounting command: unsupported partition type")
+	return errors.New("error choosing a mounting command: unsupported partition type")
 }
 
 // Validates the attributes of a Partition struct
