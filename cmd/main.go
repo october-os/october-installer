@@ -22,8 +22,8 @@ import (
 )
 
 func main() {
-	json := flag.String("json", "", "Installation configuration JSON")
-	json_file := flag.String("json-file", "", "Installation configuration JSON file")
+	json := flag.String("json-raw", "", "Installation configuration as JSON")
+	json_file := flag.String("json", "", "Path to installation configuration JSON file")
 
 	flag.Parse()
 
