@@ -30,6 +30,26 @@ func InstallOfficialPackages() error {
 	return nil
 }
 
+// Adds the extra packages to the list of packages to be installed on the system.
+//
+// Can return errors of types :
+//   - PostInstallError
+func AddExtraPackages(ep ExtraPackages) error {
+	if len(ep.OfficialRepositories) > 0 {
+		if err := addPackages(officialPackagesFilePath, ep.OfficialRepositories); err != nil {
+			return PostInstallError{err: err}
+		}
+	}
+
+	if len(ep.AUR) > 0 {
+		if err := addPackages(aurPackagesFilePath, ep.AUR); err != nil {
+			return PostInstallError{err: err}
+		}
+	}
+
+	return nil
+}
+
 // Gets the list of packages that need to be installed
 // with yay, installs yay and them, then configure them
 // if needed.

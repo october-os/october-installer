@@ -72,7 +72,7 @@ func main() {
 
 	userCreation(&installationConfig.Users, installationConfig.RootPassword)
 
-	postInstallStep(installationConfig.BestEffortGpu, installationConfig.Users)
+	postInstallStep(installationConfig.BestEffortGpu, installationConfig.Users, installationConfig.ExtraPackages)
 
 	fmt.Println("October Linux installation done!")
 }
@@ -155,7 +155,7 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 
 // Runs all the post install steps like installing
 // packages, GPU drivers etc.
-func postInstallStep(installGpuDrivers bool, users []user.User) {
+func postInstallStep(installGpuDrivers bool, users []user.User, extraPackages postinstall.ExtraPackages) {
 	fmt.Println("Setting up branding...")
 	if err := postinstall.SetupBranding(); err != nil {
 		exitWithErrorCode(err, err.Error())
@@ -177,6 +177,12 @@ func postInstallStep(installGpuDrivers bool, users []user.User) {
 		}
 
 		fmt.Println("GPU drivers installed.")
+	}
+
+	if len(extraPackages.OfficialRepositories) > 0 || len(extraPackages.AUR) > 0 {
+		if err := postinstall.AddExtraPackages(extraPackages); err != nil {
+			exitWithErrorCode(err, err.Error())
+		}
 	}
 
 	fmt.Println("Installing packages from official repositories...")

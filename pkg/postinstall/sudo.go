@@ -13,7 +13,7 @@ const sudoerFilePath string = "/etc/sudoers.d/builder"
 // passwordless sudoer. Needed for installing
 // yay and software with it during installation.
 func activateBuilderAccount() error {
-	createUserCommand := fmt.Sprintf("useradd %s && passwd -d %s", username, username)
+	createUserCommand := fmt.Sprintf("useradd -m %s && passwd -d %s", username, username)
 	if err := arch_chroot.Run(createUserCommand); err != nil {
 		return err
 	}

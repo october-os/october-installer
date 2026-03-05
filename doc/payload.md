@@ -35,6 +35,10 @@
   "locale": "[user locale]",
   "hostname": "[user hostname]",
   "rootPassword": "[root password]",
-  "bestEffortGPU": true
+  "bestEffortGPU": true,
+  "extraPackages": {
+    "officialRepositories": ["package1", "package2"],
+    "aur": ["package1", "package2"]
+  }
 }
 ```
