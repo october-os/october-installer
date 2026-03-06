@@ -3,7 +3,6 @@ package postinstall
 import (
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"slices"
 	"strings"
@@ -55,12 +54,12 @@ func BestEffortGPUDrivers() error {
 	}
 
 	if len(officialPackages) > 0 {
-		if err := addGPUPackages(officialPackagesFilePath, officialPackages); err != nil {
+		if err := addPackages(officialPackagesFilePath, officialPackages); err != nil {
 			return &PostInstallError{err: err}
 		}
 	}
 	if len(aurPackages) > 0 {
-		if err := addGPUPackages(aurPackagesFilePath, aurPackages); err != nil {
+		if err := addPackages(aurPackagesFilePath, aurPackages); err != nil {
 			return &PostInstallError{err: err}
 		}
 	}
@@ -110,17 +109,4 @@ func getGPUInfo() (gpuInfo, error) {
 	}
 
 	return gpuInfo{}, fmt.Errorf("error getting GPU brand: not found")
-}
-
-// Adds the packages to a given file path in this format: "- package\n"
-func addGPUPackages(filePath string, packages []string) error {
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	for _, p := range packages {
-		fmt.Fprintf(file, "- %s\n", p)
-	}
-	return nil
 }

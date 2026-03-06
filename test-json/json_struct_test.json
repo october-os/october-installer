@@ -46,5 +46,9 @@
   "locale": "US.UTF-8",
   "hostname": "testhostname",
   "rootPassword": "test",
-  "bestEffortGPU": false
+  "bestEffortGPU": false,
+  "extraPackages": {
+    "officialRepositories": ["cowsay", "sl"],
+    "aur": ["neofetch"]
+  }
 }

@@ -13,7 +13,11 @@ This part contains all the more "general" configuration of the installation.
   "locale": "US.UTF-8",
   "hostname": "testhostname",
   "rootPassword": "test",
-  "bestEffortGPU": false
+  "bestEffortGPU": false,
+  "extraPackages": {
+    "officialRepositories": ["package1", "package2"],
+    "aur": ["package1", "package2"]
+  }
 }
 ```
 
@@ -27,3 +31,6 @@ This part contains all the more "general" configuration of the installation.
 | hostname | string | The hostname of the new system. | Yes |
 | rootPassword | string | The root password on the new install. | Yes |
 | bestEffortGPU | boolean | If true, it will attempt to install the drivers for the systems GPU on the new install. Only Nvidia, AMD and Intel are supported. | Yes |
+| extraPackages | object | The extra packages to be installed on the system. | No |
+| extraPackages.officialRepositories | array of strings | The extra packages to be installed from the official Arch Linux repositories | No |
+| extraPackages.aur | array of strings | The extra packages to be installed from the Arch User Repository (AUR) | No |

@@ -2,6 +2,7 @@ package postinstall
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -14,6 +15,34 @@ import (
 type pkg struct {
 	name  string
 	flags []string
+}
+
+// ExtraPackages represents the extra packages to be installed on the system.
+// They can come from either:
+// - the official Arch Linux repositories
+// - the Arch User Repository (AUR)
+type ExtraPackages struct {
+	OfficialRepositories []string `json:"officialRepositories"`
+	AUR                  []string `json:"aur"`
+}
+
+// Validates the attributes of an ExtraPackages struct
+// Returns a PostInstallError if validation fails
+func (e *ExtraPackages) Validate() error {
+	whiteSpaceError := PostInstallError{err: errors.New("Extra packages validation: error=white space detected in a package's name")}
+	for _, p := range e.OfficialRepositories {
+		if strings.Contains(p, " ") {
+			return whiteSpaceError
+		}
+	}
+
+	for _, p := range e.AUR {
+		if strings.Contains(p, " ") {
+			return whiteSpaceError
+		}
+	}
+
+	return nil
 }
 
 const officialPackagesFilePath string = "/root/postinstall/packages"
@@ -123,4 +152,17 @@ func getServiceName(packageName, flag string) string {
 	}
 
 	return packageName
+}
+
+// Adds the packages to a given file path in this format: "- package\n"
+func addPackages(filePath string, packages []string) error {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	for _, p := range packages {
+		fmt.Fprintf(file, "- %s\n", p)
+	}
+	return nil
 }
