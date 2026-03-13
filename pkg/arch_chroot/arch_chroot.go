@@ -18,13 +18,12 @@ const shell string = "/bin/bash"
 //
 // It can return types of errors:
 //   - ArchChrootError
-func Run(commands... string) error {
+func Run(commands ...string) error {
 	var command strings.Builder
-	if len(commands) == 1 {
-		command.WriteString(commands[0])
-	} else {
-		for _, cmd := range commands {
-			command.WriteString(cmd)
+	for i, cmd := range commands {
+		command.WriteString(cmd)
+
+		if i != len(commands)-1 {
 			command.WriteString(" && ")
 		}
 	}
