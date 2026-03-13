@@ -3,6 +3,7 @@ package arch_chroot
 import (
 	"io"
 	"os/exec"
+	"strings"
 )
 
 // mountPoint is the mount point of the system to chroot into
@@ -17,8 +18,18 @@ const shell string = "/bin/bash"
 //
 // It can return types of errors:
 //   - ArchChrootError
-func Run(command string) error {
-	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command)
+func Run(commands... string) error {
+	var command strings.Builder
+	if len(commands) == 1 {
+		command.WriteString(commands[0])
+	} else {
+		for _, cmd := range commands {
+			command.WriteString(cmd)
+			command.WriteString(" && ")
+		}
+	}
+
+	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command.String())
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return ArchChrootError{err: err}
@@ -28,7 +39,7 @@ func Run(command string) error {
 	if err != nil {
 		stdErrOutput, _ := io.ReadAll(stderr)
 		return ArchChrootError{
-			command: command,
+			command: command.String(),
 			stdErr:  string(stdErrOutput),
 			err:     err,
 		}
