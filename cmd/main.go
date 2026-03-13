@@ -23,13 +23,13 @@ import (
 
 func main() {
 	json := flag.String("json-raw", "", "Installation configuration as JSON")
-	json_file := flag.String("json", "", "Path to installation configuration JSON file")
+	jsonFile := flag.String("json", "", "Path to installation configuration JSON file")
 
 	flag.Parse()
 
 	fmt.Println("Parsing JSON configuration...")
 
-	installationConfig, err := getInstallConfiguration(json, json_file)
+	installationConfig, err := getInstallConfiguration(json, jsonFile)
 	if err != nil {
 		exitWithErrorCode(err, err.Error())
 	}
@@ -79,9 +79,9 @@ func main() {
 
 // Takes the inputs from the -json and -json-file flags and returns the
 // installation configuration after being parsed or an error.
-func getInstallConfiguration(json, json_file *string) (*json_parser.Installation, error) {
-	if (*json == "" || json == nil) && (*json_file == "" || json_file == nil) {
-		return nil, errors.New("Missing 'json' or 'json-file' arg.")
+func getInstallConfiguration(json, jsonFile *string) (*json_parser.Installation, error) {
+	if *json == "" && *jsonFile == "" {
+		return nil, errors.New("missing 'json' or 'json-raw' arg")
 	}
 
 	var installationConfig *json_parser.Installation
@@ -92,8 +92,8 @@ func getInstallConfiguration(json, json_file *string) (*json_parser.Installation
 		if err != nil {
 			return nil, err
 		}
-	} else if *json_file != "" {
-		content, err := os.ReadFile(*json_file)
+	} else if *jsonFile != "" {
+		content, err := os.ReadFile(*jsonFile)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +127,7 @@ func userCreation(users *[]user.User, rootPassword string) {
 	fmt.Println("Finished setting up root password.")
 }
 
-// Runs all the pre install steps like doing partitions
+// Runs all the pre-installation steps like doing partitions
 // and setting up mirrors.
 func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 	fmt.Println("Updating keyring...")
@@ -238,7 +238,7 @@ func setTime(tmz string) {
 // Exits the installer with the given exit code
 // and prints the given message in STDERR.
 func exitWithErrorCode(e error, m string) {
-	exit_code := error_handler.GetExitCode(e)
+	exitCode := error_handler.GetExitCode(e)
 	fmt.Fprintln(os.Stderr, m)
-	os.Exit(exit_code)
+	os.Exit(exitCode)
 }
