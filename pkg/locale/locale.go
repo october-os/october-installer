@@ -23,8 +23,10 @@ func GenerateLocales(locale string) error {
 	localeConfCmd := fmt.Sprintf("echo LANG=%s > /etc/locale.conf", locale)
 	localegenCmd := "locale-gen"
 
-	command := fmt.Sprintf("%s && %s && %s", sedCmd, localeConfCmd, localegenCmd)
-	if err := arch_chroot.Run(command); err != nil {
+	if err := arch_chroot.Run(
+		sedCmd,
+		localeConfCmd,
+		localegenCmd); err != nil {
 		return LocaleError{err: err}
 	}
 	return nil

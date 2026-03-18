@@ -16,6 +16,5 @@ func installYay() error {
 	goInDir := fmt.Sprintf("cd %s", yayPath)
 	makePkg := fmt.Sprintf("sudo -u %s makepkg -si --noconfirm", username)
 
-	command := fmt.Sprintf("%s && %s && %s && %s", cloneYayBinary, chownToNobody, goInDir, makePkg)
-	return arch_chroot.Run(command)
+	return arch_chroot.Run(cloneYayBinary, chownToNobody, goInDir, makePkg)
 }

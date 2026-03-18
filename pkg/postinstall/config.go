@@ -58,16 +58,13 @@ func setupConfigForUsers(users []user.User) error {
 		chownCmd := fmt.Sprintf("chown -R %s:%s %s/.config", u.Username, u.Username, u.Homepath)
 		runSetup := fmt.Sprintf("sudo -u %s %s/scripts/setup.sh", u.Username, octoberConfigDir)
 
-		cmd := fmt.Sprintf("%s && %s && %s && %s", createDirCmd, copyCmd, chownCmd, runSetup)
-
-		if err := arch_chroot.Run(cmd); err != nil {
+		if err := arch_chroot.Run(createDirCmd, copyCmd, chownCmd, runSetup); err != nil {
 			return err
 		}
 
 		copyHyprPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/colors.conf %s/hypr/base", u.Username, octoberConfigDir, octoberConfigDir)
 		copyQuickshellPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/Theme.qml %s/quickshell/theme", u.Username, octoberConfigDir, octoberConfigDir)
-		cmd = fmt.Sprintf("%s && %s", copyHyprPreRender, copyQuickshellPreRender)
-		if err := arch_chroot.Run(cmd); err != nil {
+		if err := arch_chroot.Run(copyHyprPreRender, copyQuickshellPreRender); err != nil {
 			return err
 		}
 	}
@@ -92,7 +89,5 @@ func cloneRepoToTemp() error {
 	createTmpFolder := "mkdir /october-temp"
 	cloneRepo := fmt.Sprintf("git clone %s /october-temp/october-config", octoberConfigRepo)
 
-	cmd := fmt.Sprintf("%s && %s", createTmpFolder, cloneRepo)
-
-	return arch_chroot.Run(cmd)
+	return arch_chroot.Run(createTmpFolder, cloneRepo)
 }

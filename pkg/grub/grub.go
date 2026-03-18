@@ -54,8 +54,7 @@ func updateGrubConfig() error {
 func setUpOsProber() error {
 	sedCommand := "sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub"
 	osProberCommand := "os-prober"
-	command := fmt.Sprintf("%s && %s", sedCommand, osProberCommand)
-	return arch_chroot.Run(command)
+	return arch_chroot.Run(sedCommand, osProberCommand)
 }
 
 func setUpBranding() error {
