@@ -37,7 +37,7 @@ func GenerateLocales(locale string) error {
 // Can return error types:
 //   - LocaleError
 func ValidateLocale(locale string) error {
-	command := fmt.Sprintf("cat %s | grep \"%s UTF-8\"", filepath, locale)
+	command := fmt.Sprintf("cat %s | grep -w \"#%s UTF-8\"", filepath, locale)
 	cmd := exec.Command("/bin/bash", "-c", command)
 
 	if err := cmd.Run(); err != nil {
@@ -45,10 +45,10 @@ func ValidateLocale(locale string) error {
 			return LocaleError{
 				err: errors.New("Invalid locale"),
 			}
-		} else {
-			return LocaleError{
-				err: err,
-			}
+		}
+
+		return LocaleError{
+			err: err,
 		}
 	}
 

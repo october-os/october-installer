@@ -43,7 +43,7 @@
   ],
   "mirrorCountries": ["Canada"],
   "timezone": "America/Montreal",
-  "locale": "US.UTF-8",
+  "locale": "en_US.UTF-8",
   "hostname": "testhostname",
   "rootPassword": "test",
   "bestEffortGPU": false,
