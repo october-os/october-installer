@@ -23,6 +23,6 @@ func getCpuMicroCode() (string, error) {
 	case cpuid.AMD:
 		return amdMicrocode, nil
 	default:
-		return "", CoreInstallError{errors.New("CPU is not supported")}
+		return "", errors.New("CPU is not supported")
 	}
 }
