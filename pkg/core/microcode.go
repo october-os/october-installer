@@ -1,14 +1,10 @@
 package core
 
 import (
-	"io"
-	"os/exec"
-	"strings"
-)
+	"errors"
 
-// vendor_id field values inside /proc/cpuinfo
-const amdId string = "AuthenticAMD"
-const intelId string = "GenuineIntel"
+	"github.com/klauspost/cpuid/v2"
+)
 
 // microcode packages name
 const amdMicrocode string = "amd-ucode"
@@ -21,30 +17,12 @@ const intelMicrocode string = "intel-ucode"
 //
 //	cat /proc/cpuinfo | grep 'vendor_id'
 func getCpuMicroCode() (string, error) {
-	cmd := exec.Command("/bin/bash", "-c", "cat /proc/cpuinfo | grep 'vendor_id'")
-	stdoutPipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return "", err
-	}
-
-	if err := cmd.Start(); err != nil {
-		return "", err
-	}
-
-	stdoutBytes, err := io.ReadAll(stdoutPipe)
-	if err != nil {
-		return "", err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return "", err
-	}
-
-	if strings.Contains(string(stdoutBytes), amdId) {
-		return amdMicrocode, nil
-	} else if strings.Contains(string(stdoutBytes), intelId) {
+	switch cpuid.CPU.VendorID {
+	case cpuid.Intel:
 		return intelMicrocode, nil
+	case cpuid.AMD:
+		return amdMicrocode, nil
+	default:
+		return "", CoreInstallError{errors.New("CPU is not supported")}
 	}
-
-	return "", nil
 }
