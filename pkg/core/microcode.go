@@ -12,10 +12,6 @@ const intelMicrocode string = "intel-ucode"
 
 // Checks the vendor_id of all CPUs and returns the
 // corresponding microcode package that has to be installed.
-//
-// It gets the vendor id by executing:
-//
-//	cat /proc/cpuinfo | grep 'vendor_id'
 func getCpuMicroCode() (string, error) {
 	switch cpuid.CPU.VendorID {
 	case cpuid.Intel:
