@@ -2,10 +2,8 @@ package hostname
 
 import (
 	"errors"
-	"fmt"
+	"os"
 	"unicode"
-
-	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 // Sets the network hostname for the newly
@@ -14,10 +12,11 @@ import (
 // Can return errors of types:
 //   - HostnameError
 func SetHostname(hostname string) error {
-	command := fmt.Sprintf("echo %s > /etc/hostname", hostname)
-	if err := arch_chroot.Run(command); err != nil {
+	err := os.WriteFile("/mnt/etc/hostname", []byte(hostname), 0644)
+	if err != nil {
 		return HostnameError{err: err}
 	}
+
 	return nil
 }
 
