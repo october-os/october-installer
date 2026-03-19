@@ -1,6 +1,9 @@
 package fstab
 
-import "os/exec"
+import (
+	"os"
+	"os/exec"
+)
 
 // Generates the fstab file with genfstab.
 //
@@ -18,10 +21,10 @@ func GenerateFstab() error {
 
 // Generates the fstab file with genfstab.
 func genfstab() error {
-	cmd := exec.Command("/bin/bash", "-c", "genfstab -U /mnt >> /mnt/etc/fstab")
-	if err := cmd.Run(); err != nil {
+	out, err := exec.Command("genfstab", "-U", "/mnt").Output()
+	if err != nil {
 		return err
 	}
 
-	return nil
+	return os.WriteFile("/mnt/etc/fstab", out, 0644)
 }
