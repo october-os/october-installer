@@ -2,12 +2,14 @@ package postinstall
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
 const username string = "builder"
 const sudoerFilePath string = "/etc/sudoers.d/builder"
+const sudoFile string = "/mnt/etc/sudoers"
 
 // Creates the builder account and adds it to the
 // passwordless sudoer. Needed for installing
@@ -35,7 +37,14 @@ func deleteBuilderAccount() error {
 // inside the newly installed system.
 func addWheelGroup() error {
 	wheelLine := "%wheel      ALL=(ALL:ALL) ALL"
-	command := fmt.Sprintf("echo \"%s\" >> /etc/sudoers", wheelLine)
+	f, err := os.OpenFile(sudoFile, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
-	return arch_chroot.Run(command)
+	if _, err := f.WriteString(wheelLine); err != nil {
+		return err
+	}
+	return nil
 }

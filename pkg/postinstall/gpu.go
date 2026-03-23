@@ -1,11 +1,10 @@
 package postinstall
 
 import (
-	"fmt"
-	"io"
-	"os/exec"
-	"slices"
+	"errors"
 	"strings"
+
+	"github.com/jaypipes/ghw"
 )
 
 // Packages for each brand
@@ -66,47 +65,26 @@ func BestEffortGPUDrivers() error {
 	return nil
 }
 
-// Fetches the system's GPU information using lspci and returns it
+// Fetches the system's GPU information using ghw and returns it
 func getGPUInfo() (gpuInfo, error) {
-	command := "lspci | grep -i 'VGA compatible controller'"
-	cmd := exec.Command("/bin/bash", "-c", command)
-	stdout, err := cmd.StdoutPipe()
+	info, err := ghw.GPU()
 	if err != nil {
 		return gpuInfo{}, err
 	}
 
-	if err := cmd.Start(); err != nil {
-		return gpuInfo{}, err
-	}
-	var stdoutOutput []byte
-	if stdoutOutput, err = io.ReadAll(stdout); err != nil {
-		return gpuInfo{}, err
-	}
-	if err := cmd.Wait(); err != nil {
-		return gpuInfo{}, err
+	if len(info.GraphicsCards) == 0 {
+		return gpuInfo{}, errors.New("no graphics cards found")
 	}
 
-	stdoutOutputString := string(stdoutOutput)
-	if strings.Contains(stdoutOutputString, "Intel") {
-		return gpuInfo{
-			brand: "Intel",
-		}, nil
-	}
-	if strings.Contains(stdoutOutputString, "AMD") {
-		return gpuInfo{
-			brand: "AMD",
-		}, nil
-	}
-	if strings.Contains(stdoutOutputString, "NVIDIA") {
-		for p := range strings.SplitSeq(stdoutOutputString, " ") {
-			if len(p) == 5 && slices.Contains(nvidiaGPUFamilies, p[:2]) {
-				return gpuInfo{
-					brand:  "NVIDIA",
-					family: p,
-				}, nil
-			}
-		}
+	card := info.GraphicsCards[0]
+	if strings.Contains(card.DeviceInfo.Vendor.Name, "Advanced Micro Devices") {
+		return gpuInfo{brand: "AMD", family: ""}, nil
+	} else if strings.Contains(card.DeviceInfo.Vendor.Name, "Intel") {
+		return gpuInfo{brand: "Intel", family: ""}, nil
+	} else if strings.Contains(card.DeviceInfo.Vendor.Name, "NVIDIA") {
+		productFamily := strings.Split(card.DeviceInfo.Product.Name, " ")
+		return gpuInfo{brand: "NVIDIA", family: productFamily[0]}, nil
 	}
 
-	return gpuInfo{}, fmt.Errorf("error getting GPU brand: not found")
+	return gpuInfo{}, errors.New("no supported GPU device found")
 }

@@ -1,9 +1,9 @@
 package locale
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
-	"os/exec"
+	"os"
 
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
@@ -37,18 +37,14 @@ func GenerateLocales(locale string) error {
 // Can return error types:
 //   - LocaleError
 func ValidateLocale(locale string) error {
-	command := fmt.Sprintf("cat %s | grep -w \"#%s UTF-8\"", filepath, locale)
-	cmd := exec.Command("/bin/bash", "-c", command)
+	content, err := os.ReadFile(filepath)
+	if err != nil {
+		return LocaleError{err: err}
+	}
 
-	if err := cmd.Run(); err != nil {
-		if cmd.ProcessState.ExitCode() == 1 { // not found
-			return LocaleError{
-				err: errors.New("Invalid locale"),
-			}
-		}
-
+	if !bytes.Contains(content, []byte(fmt.Sprintf("#%s UTF-8", locale))) {
 		return LocaleError{
-			err: err,
+			err: fmt.Errorf("%s is not a valid locale file", locale),
 		}
 	}
 
