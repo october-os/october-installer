@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"os/exec"
 )
 
@@ -21,10 +20,6 @@ func InstallBasicInstallation() error {
 	if err != nil {
 		return CoreInstallError{
 			err: err,
-		}
-	} else if cpuMicrocode == "" {
-		return CoreInstallError{
-			err: errors.New("Unsupported CPU detected. Needs to be an AMD or Intel X86_64 CPU."),
 		}
 	}
 
