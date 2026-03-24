@@ -4,6 +4,9 @@ import (
 	"os/exec"
 )
 
+var currentlyTesting bool = false
+var testCmd *exec.Cmd
+
 // Basic Arch Linux install packages names
 const linuxKernel string = "linux"
 const baseArch string = "base"
@@ -24,6 +27,11 @@ func InstallBasicInstallation() error {
 	}
 
 	cmd := exec.Command("pacstrap", "-K", "/mnt", baseArch, linuxKernel, baseLinuxFirmware, cpuMicrocode)
+
+	if currentlyTesting {
+		testCmd = cmd
+		return nil
+	}
 
 	if err := cmd.Run(); err != nil {
 		return CoreInstallError{
