@@ -23,6 +23,7 @@ func TestInstallBasicInstallationValidCpu(t *testing.T) {
 	err := InstallBasicInstallation()
 
 	assert.Nil(t, err, "Error should be nil with valid installation")
+	assert.Len(t, utils.CommandExecutorGot, 1)
 	assert.Equal(t, want, utils.CommandExecutorGot[0])
 }
 
@@ -39,4 +40,5 @@ func TestInstallBasicInstallationInvalidCpu(t *testing.T) {
 
 	assert.NotNil(t, err, "Error should be not nil with valid installation")
 	assert.ErrorAs(t, err, &CoreInstallError{}, "Error should be CoreInstallerError on error")
+	assert.Len(t, utils.CommandExecutorGot, 0)
 }
