@@ -2,20 +2,16 @@ package utils
 
 import (
 	"os/exec"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-var Want string
-var T *testing.T
+var CommandExecutorGot []string
 
 type CommandExecutorMock struct {
 	*exec.Cmd
 }
 
 func (mock CommandExecutorMock) Run() error {
-	assert.Equal(T, Want, mock.Cmd.String())
+	CommandExecutorGot = append(CommandExecutorGot, mock.Cmd.String())
 	return nil
 }
 

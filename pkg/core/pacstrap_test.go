@@ -15,17 +15,15 @@ func TestInstallBasicInstallationValidCpu(t *testing.T) {
 	normalCommandExecutor := commandExecutor
 	defer func() {
 		commandExecutor = normalCommandExecutor
-		utils.T = nil
-		utils.Want = ""
+		utils.CommandExecutorGot = []string{}
 	}()
 
 	commandExecutor = utils.NewCommandExecutorMock
-	utils.Want = want
-	utils.T = t
 
 	err := InstallBasicInstallation()
 
 	assert.Nil(t, err, "Error should be nil with valid installation")
+	assert.Equal(t, want, utils.CommandExecutorGot[0])
 }
 
 func TestInstallBasicInstallationInvalidCpu(t *testing.T) {
@@ -33,11 +31,9 @@ func TestInstallBasicInstallationInvalidCpu(t *testing.T) {
 	normalCommandExecutor := commandExecutor
 	defer func() {
 		commandExecutor = normalCommandExecutor
-		utils.T = nil
 	}()
 
 	commandExecutor = utils.NewCommandExecutorMock
-	utils.T = t
 
 	err := InstallBasicInstallation()
 
