@@ -4,6 +4,7 @@ import (
 	"os/exec"
 )
 
+// Testing override variables
 var currentlyTesting bool = false
 var testCmd *exec.Cmd
 
