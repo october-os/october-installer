@@ -1,12 +1,10 @@
 package core
 
 import (
-	"os/exec"
+	"github.com/october-os/october-installer/pkg/utils"
 )
 
-// Testing override variables
-var currentlyTesting bool = false
-var testCmd *exec.Cmd
+var commandExecutor = utils.NewCommandExecutor
 
 // Basic Arch Linux install packages names
 const linuxKernel string = "linux"
@@ -27,12 +25,14 @@ func InstallBasicInstallation() error {
 		}
 	}
 
-	cmd := exec.Command("pacstrap", "-K", "/mnt", baseArch, linuxKernel, baseLinuxFirmware, cpuMicrocode)
-
-	if currentlyTesting {
-		testCmd = cmd
-		return nil
-	}
+	cmd := commandExecutor(
+		"pacstrap",
+		"-K",
+		"/mnt",
+		baseArch,
+		linuxKernel,
+		baseLinuxFirmware,
+		cpuMicrocode)
 
 	if err := cmd.Run(); err != nil {
 		return CoreInstallError{
