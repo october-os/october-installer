@@ -4,6 +4,9 @@ import (
 	"github.com/october-os/october-installer/pkg/utils"
 )
 
+// CommandExecutor for calling making
+// a new command. Gets overriden during testing
+// for a mock.
 var commandExecutor = utils.NewCommandExecutor
 
 // Basic Arch Linux install packages names
