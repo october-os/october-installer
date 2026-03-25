@@ -8,6 +8,7 @@ import (
 var CommandExecutorGot []string
 
 // The struct for mocking CommandExecutor in testing.
+// Implements ICommandExecutor.
 type CommandExecutorMock struct {
 	*exec.Cmd
 }
