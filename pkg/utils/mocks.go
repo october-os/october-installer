@@ -1,12 +1,16 @@
 package utils
 
 import (
+	"errors"
 	"os/exec"
 )
 
 // CommandExecutorGot slice of all the commands that called Run()
 var CommandExecutorGot []string
+
 var OutputMockReturn string
+
+var ReturnMockError bool = false
 
 // CommandExecutorMock struct for mocking CommandExecutor in testing.
 // Implements ICommandExecutor.
@@ -18,6 +22,10 @@ type CommandExecutorMock struct {
 // CommandExecutorGot.
 func (mock CommandExecutorMock) Run() error {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
+
+	if ReturnMockError {
+		return errors.New("Mock error")
+	}
 	return nil
 }
 
@@ -25,6 +33,10 @@ func (mock CommandExecutorMock) Run() error {
 // the command in CommandExecutorGot.
 func (mock CommandExecutorMock) Output() ([]byte, error) {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
+
+	if ReturnMockError {
+		return nil, errors.New("Mock error")
+	}
 	return []byte(OutputMockReturn), nil
 }
 

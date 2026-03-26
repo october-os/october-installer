@@ -41,20 +41,15 @@ func TestGenFstab(t *testing.T) {
 }
 
 func TestGenerateFstabError(t *testing.T) {
-	tempDir := t.TempDir()
-	tempFile, _ := os.CreateTemp(tempDir, "test")
-
 	normalCommandExecutor := commandExecutor
-	normalFstabFilePath := fstabPath
 	defer func() {
 		commandExecutor = normalCommandExecutor
-		fstabPath = normalFstabFilePath
 		utils.CommandExecutorGot = []string{}
+		utils.ReturnMockError = false
 	}()
 
-	fstabPath = tempFile.Name()
+	utils.ReturnMockError = true
 	commandExecutor = utils.NewCommandExecutorMock
-	_ = os.Remove(tempFile.Name())
 
 	err := GenerateFstab()
 
