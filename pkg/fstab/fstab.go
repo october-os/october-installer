@@ -6,8 +6,10 @@ import (
 	"github.com/october-os/october-installer/pkg/utils"
 )
 
+// commandExecutor for mocking exec.Cmd runs.
 var commandExecutor = utils.NewCommandExecutor
 
+// fstabPath absolute path to the fstab file.
 var fstabPath string = "/mnt/etc/fstab"
 
 // Generates the fstab file with genfstab.

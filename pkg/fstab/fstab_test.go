@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGenFstab(t *testing.T) {
+func TestGenerateFstab(t *testing.T) {
 	want := "/usr/bin/genfstab -U /mnt"
 	fileContentWant := "testing"
 

@@ -8,8 +8,12 @@ import (
 // CommandExecutorGot slice of all the commands that called Run()
 var CommandExecutorGot []string
 
+// OutputMockReturn string to be returned by Output()
+// when called
 var OutputMockReturn string
 
+// ReturnMockError boolean to indicate if methods need
+// to fail and return an error
 var ReturnMockError bool = false
 
 // CommandExecutorMock struct for mocking CommandExecutor in testing.
@@ -24,7 +28,7 @@ func (mock CommandExecutorMock) Run() error {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
 
 	if ReturnMockError {
-		return errors.New("Mock error")
+		return errors.New("mock error")
 	}
 	return nil
 }
@@ -35,7 +39,7 @@ func (mock CommandExecutorMock) Output() ([]byte, error) {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
 
 	if ReturnMockError {
-		return nil, errors.New("Mock error")
+		return nil, errors.New("mock error")
 	}
 	return []byte(OutputMockReturn), nil
 }
