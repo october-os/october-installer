@@ -28,7 +28,7 @@ func TestGenFstab(t *testing.T) {
 	fstabPath = tempFile.Name()
 	commandExecutor = utils.NewCommandExecutorMock
 
-	err := genfstab()
+	err := GenerateFstab()
 
 	assert.Nil(t, err)
 	assert.Len(t, utils.CommandExecutorGot, 1, "no command ran during this test.")
