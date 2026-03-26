@@ -34,5 +34,5 @@ func genfstab() error {
 		return err
 	}
 
-	return os.WriteFile(fstabPath, out, 0o644)
+	return os.WriteFile(fstabPath, out, 0644)
 }
