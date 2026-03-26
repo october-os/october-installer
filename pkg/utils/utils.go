@@ -6,6 +6,7 @@ import "os/exec"
 // it mockable and testable.
 type ICommandExecutor interface {
 	Run() error
+	Output() ([]byte, error)
 }
 
 // CommandExecutor struct that implements
@@ -18,6 +19,12 @@ type CommandExecutor struct {
 // Run method that calls exec.Cmd.Run().
 func (c CommandExecutor) Run() error {
 	return c.Cmd.Run()
+}
+
+// Output runs the Output() method
+// of an exec.Cmd.
+func (c CommandExecutor) Output() ([]byte, error) {
+	return c.Cmd.Output()
 }
 
 // Creates a new CommandExecutor.
