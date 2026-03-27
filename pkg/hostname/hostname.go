@@ -6,13 +6,15 @@ import (
 	"unicode"
 )
 
+var hostnameFile string = "/mnt/etc/hostname"
+
 // Sets the network hostname for the newly
 // installed system. It sets it inside /etc/hostname.
 //
 // Can return errors of types:
 //   - HostnameError
 func SetHostname(hostname string) error {
-	err := os.WriteFile("/mnt/etc/hostname", []byte(hostname), 0644)
+	err := os.WriteFile(hostnameFile, []byte(hostname), 0644)
 	if err != nil {
 		return HostnameError{err: err}
 	}
