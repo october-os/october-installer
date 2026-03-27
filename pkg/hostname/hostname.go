@@ -8,7 +8,7 @@ import (
 
 var hostnameFile string = "/mnt/etc/hostname"
 
-// Sets the network hostname for the newly
+// SetHostname sets the network hostname for the newly
 // installed system. It sets it inside /etc/hostname.
 //
 // Can return errors of types:
@@ -22,7 +22,7 @@ func SetHostname(hostname string) error {
 	return nil
 }
 
-// Checks if the given hostname is RFC1178 complient.
+// ValidateHostname checks if the given hostname is RFC1178 compliant.
 //
 // For more information: https://wiki.archlinux.org/title/Installation_guide#Network_configuration
 //
@@ -48,7 +48,7 @@ func ValidateHostname(hostname string) error {
 	return nil
 }
 
-// Checks if the given string is all lowercase and doesn't
+// charCheck checks if the given string is all lowercase and doesn't
 // contain any whitespaces.
 func charCheck(s string) bool {
 	for _, r := range s {
