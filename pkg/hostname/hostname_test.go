@@ -62,14 +62,14 @@ func TestValidateHostnameWithSpaces(t *testing.T) {
 
 func TestSetHostname(t *testing.T) {
 	hostname := "testhostname"
-	originalFile := hostnameFile
+	originalFilePath := hostnameFilePath
 
 	tempDir := t.TempDir()
 	tempFile, _ := os.CreateTemp(tempDir, "hostname-test")
-	hostnameFile = tempFile.Name()
+	hostnameFilePath = tempFile.Name()
 
 	defer func() {
-		hostname = originalFile
+		hostnameFilePath = originalFilePath
 	}()
 
 	err := SetHostname(hostname)

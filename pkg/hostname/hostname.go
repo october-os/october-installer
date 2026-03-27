@@ -6,7 +6,9 @@ import (
 	"unicode"
 )
 
-var hostnameFile string = "/mnt/etc/hostname"
+// hostnameFilePath is the absolute path to the
+// hostname file.
+var hostnameFilePath string = "/mnt/etc/hostname"
 
 // SetHostname sets the network hostname for the newly
 // installed system. It sets it inside /etc/hostname.
@@ -14,7 +16,7 @@ var hostnameFile string = "/mnt/etc/hostname"
 // Can return errors of types:
 //   - HostnameError
 func SetHostname(hostname string) error {
-	err := os.WriteFile(hostnameFile, []byte(hostname), 0644)
+	err := os.WriteFile(hostnameFilePath, []byte(hostname), 0644)
 	if err != nil {
 		return HostnameError{err: err}
 	}
