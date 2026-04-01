@@ -25,7 +25,7 @@ func TestValidateEmptyHostname(t *testing.T) {
 }
 
 func TestValidateTooLongHostname(t *testing.T) {
-	hostname := " Loremipsumdolorsitametconsecteturadipiscingelitligula"
+	hostname := "Loremipsumdolorsitametconsecteturadipiscingelitligula"
 
 	err := ValidateHostname(hostname)
 
