@@ -12,6 +12,7 @@ func TestValidateValidCountry(t *testing.T) {
 	originalMirrorListPath := mirrorlistFile
 	defer func() {
 		mirrorlistFile = originalMirrorListPath
+		mirrorMap = nil
 	}()
 
 	createAndSetMirrorListMock(t)
@@ -27,6 +28,7 @@ func TestValidateInvalidCountry(t *testing.T) {
 	originalMirrorListPath := mirrorlistFile
 	defer func() {
 		mirrorlistFile = originalMirrorListPath
+		mirrorMap = nil
 	}()
 
 	createAndSetMirrorListMock(t)
@@ -43,6 +45,7 @@ func TestValidateAmbiguousString(t *testing.T) {
 	originalMirrorListPath := mirrorlistFile
 	defer func() {
 		mirrorlistFile = originalMirrorListPath
+		mirrorMap = nil
 	}()
 
 	createAndSetMirrorListMock(t)
@@ -53,6 +56,33 @@ func TestValidateAmbiguousString(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.ErrorAs(t, err, &MirrorListError{}, "Error should be of type mirror list error")
+}
+
+func TestSetMirrorValidList(t *testing.T) {
+	originalMirrorListPath := mirrorlistFile
+	defer func() {
+		mirrorlistFile = originalMirrorListPath
+		mirrorMap = nil
+	}()
+
+	createAndSetMirrorListMock(t)
+
+	country := []string{"France", "Canada"}
+
+	err := SetMirrorList(country)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, mirrorMap[country[0]], "France mirrors should be in the mirror map")
+	assert.NotNil(t, mirrorMap[country[1]], "Canada mirrors should be in the mirror map")
+
+	content, _ := os.ReadFile(mirrorlistFile)
+	assert.NotNil(t, content)
+
+	for _, v := range country {
+		for _, server := range mirrorMap[v] {
+			assert.Contains(t, string(content), server)
+		}
+	}
 }
 
 func createAndSetMirrorListMock(t *testing.T) {

@@ -19,8 +19,7 @@ var mirrorMap map[string][]string = nil
 //   - MirrorListError
 func SetMirrorList(countries []string) error {
 	if mirrorMap == nil {
-		var err error
-		mirrorMap, err = getMirrors()
+		err := getMirrors()
 		if err != nil {
 			return MirrorListError{
 				err: err,
@@ -43,8 +42,7 @@ func SetMirrorList(countries []string) error {
 //   - MirrorListError
 func ValidateCountry(country string) error {
 	if mirrorMap == nil {
-		var err error
-		mirrorMap, err = getMirrors()
+		err := getMirrors()
 		if err != nil {
 			return MirrorListError{err: err}
 		}
@@ -83,15 +81,15 @@ func saveMirrorlist(countries []string, mirrorMap map[string][]string) error {
 // Reads the mirrorlist file and returns a map
 // that has the country name as the key and a slice of
 // all the servers as the value.
-func getMirrors() (map[string][]string, error) {
+func getMirrors() error {
 	file, err := os.Open(mirrorlistFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	var countryMap map[string][]string = make(map[string][]string)
+	mirrorMap = make(map[string][]string)
 	var lastCountry string = ""
 
 	for scanner.Scan() {
@@ -99,11 +97,11 @@ func getMirrors() (map[string][]string, error) {
 
 		if country, found := strings.CutPrefix(line, "## "); found {
 			lastCountry = country
-			countryMap[country] = make([]string, 0)
+			mirrorMap[country] = make([]string, 0)
 		} else {
-			countryMap[lastCountry] = append(countryMap[lastCountry], strings.TrimPrefix(line, "#"))
+			mirrorMap[lastCountry] = append(mirrorMap[lastCountry], strings.TrimPrefix(line, "#"))
 		}
 	}
 
-	return countryMap, nil
+	return nil
 }
