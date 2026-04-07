@@ -2,8 +2,15 @@ package fstab
 
 import (
 	"os"
-	"os/exec"
+
+	"github.com/october-os/october-installer/pkg/utils"
 )
+
+// commandExecutor for mocking exec.Cmd runs.
+var commandExecutor = utils.NewCommandExecutor
+
+// fstabPath absolute path to the fstab file.
+var fstabPath string = "/mnt/etc/fstab"
 
 // Generates the fstab file with genfstab.
 //
@@ -21,10 +28,11 @@ func GenerateFstab() error {
 
 // Generates the fstab file with genfstab.
 func genfstab() error {
-	out, err := exec.Command("genfstab", "-U", "/mnt").Output()
+	command := commandExecutor("genfstab", "-U", "/mnt")
+	out, err := command.Output()
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile("/mnt/etc/fstab", out, 0644)
+	return os.WriteFile(fstabPath, out, 0644)
 }
