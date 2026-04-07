@@ -12,7 +12,7 @@ var commandExecutor = utils.NewCommandExecutor
 // so it can install October even if it is out of date.
 //
 // Can return error of type:
-// 	- KeyringUpdateError
+//   - KeyringUpdateError
 func UpdateKeyRing() error {
 	cmd := commandExecutor("pacman", "-Sy", "--noconfirm", "archlinux-keyring")
 	if err := cmd.Run(); err != nil {
