@@ -81,9 +81,7 @@ func saveMirrorlist(countries []string, mirrorMap map[string][]string) error {
 	return nil
 }
 
-// Reads the mirrorlist file and returns a map
-// that has the country name as the key and a slice of
-// all the servers as the value.
+// getMirrors reads the mirrorlist file and populate mirrorMap.
 func getMirrors() error {
 	file, err := os.Open(mirrorlistFile)
 	if err != nil {
