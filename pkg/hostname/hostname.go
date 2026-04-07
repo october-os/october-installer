@@ -6,13 +6,17 @@ import (
 	"unicode"
 )
 
-// Sets the network hostname for the newly
+// hostnameFilePath is the absolute path to the
+// hostname file.
+var hostnameFilePath string = "/mnt/etc/hostname"
+
+// SetHostname sets the network hostname for the newly
 // installed system. It sets it inside /etc/hostname.
 //
 // Can return errors of types:
 //   - HostnameError
 func SetHostname(hostname string) error {
-	err := os.WriteFile("/mnt/etc/hostname", []byte(hostname), 0644)
+	err := os.WriteFile(hostnameFilePath, []byte(hostname), 0644)
 	if err != nil {
 		return HostnameError{err: err}
 	}
@@ -20,7 +24,7 @@ func SetHostname(hostname string) error {
 	return nil
 }
 
-// Checks if the given hostname is RFC1178 complient.
+// ValidateHostname checks if the given hostname is RFC1178 compliant.
 //
 // For more information: https://wiki.archlinux.org/title/Installation_guide#Network_configuration
 //
@@ -46,7 +50,7 @@ func ValidateHostname(hostname string) error {
 	return nil
 }
 
-// Checks if the given string is all lowercase and doesn't
+// charCheck checks if the given string is all lowercase and doesn't
 // contain any whitespaces.
 func charCheck(s string) bool {
 	for _, r := range s {
