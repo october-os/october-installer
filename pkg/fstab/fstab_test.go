@@ -30,14 +30,12 @@ func TestGenerateFstab(t *testing.T) {
 
 	err := GenerateFstab()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Len(t, utils.CommandExecutorGot, 1, "no command ran during this test.")
 	assert.Equal(t, want, utils.CommandExecutorGot[0])
 
-	actualFileContent := make([]byte, len([]byte(fileContentWant)))
-	_, err = tempFile.Read(actualFileContent)
-	assert.Nil(t, err)
-	assert.Equal(t, []byte(fileContentWant), actualFileContent, "file content doesn't match mock returned bytes array")
+	got, _ := os.ReadFile(tempFile.Name())
+	assert.Equal(t, fileContentWant, string(got), "file content doesn't match mock returned bytes array")
 }
 
 func TestGenerateFstabError(t *testing.T) {
@@ -53,6 +51,6 @@ func TestGenerateFstabError(t *testing.T) {
 
 	err := GenerateFstab()
 
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.ErrorAs(t, err, &FstabError{})
 }
