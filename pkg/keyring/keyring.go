@@ -1,10 +1,14 @@
 package keyring
 
-import "os/exec"
+import (
+	"github.com/october-os/october-installer/pkg/utils"
+)
+
+var commandExecutor = utils.NewCommandExecutor
 
 func UpdateKeyRing() error {
-	cmd := exec.Command("pacman", "-Sy", "--noconfirm", "archlinux-keyring")
-	if err := cmd.Start(); err != nil {
+	cmd := commandExecutor("pacman", "-Sy", "--noconfirm", "archlinux-keyring")
+	if err := cmd.Run(); err != nil {
 		return KeyringUpdateError{err: err}
 	}
 	return nil
