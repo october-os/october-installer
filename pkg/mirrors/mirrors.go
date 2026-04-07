@@ -10,6 +10,9 @@ import (
 // Absolute path to the mirrorlist file.
 var mirrorlistFile string = "/etc/pacman.d/mirrorlist"
 
+// mirrorMap Map of all the mirrors in the mirrorlist
+// file. Key is the country and the value is an array
+// of servers.
 var mirrorMap map[string][]string = nil
 
 // Sets the mirrorlist file with only the servers for the
