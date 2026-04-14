@@ -95,6 +95,9 @@ func getMirrors() error {
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		if len(line) == 0 {
+			continue
+		}
 
 		if country, found := strings.CutPrefix(line, "## "); found {
 			lastCountry = country
