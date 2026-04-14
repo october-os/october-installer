@@ -2,14 +2,18 @@ package mirrors
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"strings"
 )
 
 // Absolute path to the mirrorlist file.
-const mirrorlistFile string = "/etc/pacman.d/mirrorlist"
+var mirrorlistFile string = "/etc/pacman.d/mirrorlist"
+
+// mirrorMap Map of all the mirrors in the mirrorlist
+// file. Key is the country and the value is an array
+// of servers.
+var mirrorMap map[string][]string = nil
 
 // Sets the mirrorlist file with only the servers for the
 // given countries and removes all the unused ones.
@@ -17,10 +21,12 @@ const mirrorlistFile string = "/etc/pacman.d/mirrorlist"
 // Can return error types:
 //   - MirrorListError
 func SetMirrorList(countries []string) error {
-	mirrorMap, err := getMirrors()
-	if err != nil {
-		return MirrorListError{
-			err: err,
+	if mirrorMap == nil {
+		err := getMirrors()
+		if err != nil {
+			return MirrorListError{
+				err: err,
+			}
 		}
 	}
 
@@ -38,12 +44,15 @@ func SetMirrorList(countries []string) error {
 // Can return errors of types:
 //   - MirrorListError
 func ValidateCountry(country string) error {
-	content, err := os.ReadFile(mirrorlistFile)
-	if err != nil {
-		return MirrorListError{err: err}
+	if mirrorMap == nil {
+		err := getMirrors()
+		if err != nil {
+			return MirrorListError{err: err}
+		}
 	}
 
-	if !bytes.Contains(content, []byte(country)) {
+	_, found := mirrorMap[country]
+	if !found {
 		return MirrorListError{
 			err: fmt.Errorf("%s is not a valid country", country),
 		}
@@ -72,33 +81,31 @@ func saveMirrorlist(countries []string, mirrorMap map[string][]string) error {
 	return nil
 }
 
-// Reads the mirrorlist file and returns a map
-// that has the country name as the key and a slice of
-// all the servers as the value.
-func getMirrors() (map[string][]string, error) {
+// getMirrors reads the mirrorlist file and populate mirrorMap.
+func getMirrors() error {
 	file, err := os.Open(mirrorlistFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	var countryMap map[string][]string = make(map[string][]string)
+	mirrorMap = make(map[string][]string)
 	var lastCountry string = ""
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line == " " {
+		if len(line) == 0 {
 			continue
 		}
 
 		if country, found := strings.CutPrefix(line, "## "); found {
 			lastCountry = country
-			countryMap[country] = make([]string, 0)
+			mirrorMap[country] = make([]string, 0)
 		} else {
-			countryMap[lastCountry] = append(countryMap[lastCountry], strings.TrimPrefix(line, "#"))
+			mirrorMap[lastCountry] = append(mirrorMap[lastCountry], strings.TrimPrefix(line, "#"))
 		}
 	}
 
-	return countryMap, nil
+	return nil
 }
