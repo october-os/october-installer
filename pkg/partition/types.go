@@ -110,6 +110,10 @@ func (p *Partition) toSfdiskFormat() string {
 	return partition_string
 }
 
+func (p *Partition) isSystemPartition() bool {
+	return p.PartitionType == gptPartitionTypeEfi || p.PartitionType == gptPartitionTypeSwap || p.PartitionType == gptPartitionTypeRoot
+}
+
 // Returns the command that can be used to format the partition
 func (p *Partition) formatCommand(path string) (*exec.Cmd, error) {
 	switch p.PartitionType {
@@ -129,7 +133,7 @@ func (p *Partition) formatCommand(path string) (*exec.Cmd, error) {
 	return nil, errors.New("error choosing a formatting command: unsupported file system or partition type")
 }
 
-// Returns the command that can be used to mount the partition
+// Mounts the partition
 func (p *Partition) mount(path string) error {
 	switch p.PartitionType {
 	case gptPartitionTypeEfi:
@@ -144,7 +148,7 @@ func (p *Partition) mount(path string) error {
 	case gptPartitionTypeRoot:
 		return syscall.Mount(path, "/mnt", p.FileSystem, 0, "")
 	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
-		return syscall.Mount(path, p.MountPoint, p.FileSystem, 0, "")
+		return syscall.Mount(path, fmt.Sprintf("/mnt%s", p.MountPoint), p.FileSystem, 0, "")
 	}
 
 	return errors.New("error choosing a mounting command: unsupported partition type")
@@ -229,4 +233,9 @@ func (p *PartitionSize) Validate() error {
 	}
 
 	return nil
+}
+
+type CreatedPartition struct {
+	Partition           Partition
+	SfdiskJsonPartition SfdiskJsonPartition
 }

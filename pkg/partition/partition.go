@@ -5,60 +5,80 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"syscall"
 )
 
-// Sets up the partitions for a list of Drive:
-// 1. Checks compatibility
-// 2. Creates the partitions
-// 3. Formats and mounts each partition
-//
-// Can return one type of error: PartitionError
-func SetupPartitions(drives []Drive) error {
+func CreatePartitions(drives []Drive) ([]CreatedPartition, error) {
 	cleanUpMounts()
-
 	if err := checkCompatibility(drives); err != nil {
-		return PartitionError{err: err}
+		return nil, PartitionError{err: err}
 	}
-	newPartitionsMappings, err := createPartitions(drives)
+	createdPartitions, err := createPartitions(drives)
 	if err != nil {
-		return PartitionError{err: err}
+		return nil, PartitionError{err: err}
 	}
+	return createdPartitions, nil
+}
 
-	rootFound := false
-	efiFoundBeforeRoot := false
-	var efiPartition int
-	for i, mapping := range newPartitionsMappings {
-		for partition, sfdiskPartition := range mapping {
-			if partition.PartitionType == gptPartitionTypeEfi && !rootFound {
-				efiFoundBeforeRoot = true
-				efiPartition = i
-				continue
-			} else if partition.PartitionType == gptPartitionTypeRoot {
-				rootFound = true
-			}
+func FormatPartitions(partitions []CreatedPartition) error {
+	for _, p := range partitions {
+		if err := formatPartition(p.Partition, p.SfdiskJsonPartition.Node); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
-				return PartitionError{err: err}
-			}
-			if err = mountPartition(partition, sfdiskPartition.Node); err != nil {
-				return PartitionError{err: err}
-			}
+func MountSystemPartitions(partitions []CreatedPartition) error {
+	var systemPartitions []CreatedPartition
+	for _, p := range partitions {
+		if p.Partition.isSystemPartition() {
+			systemPartitions = append(systemPartitions, p)
 		}
 	}
 
-	if efiFoundBeforeRoot {
-		for p, sfdiskPartition := range newPartitionsMappings[efiPartition] {
-			if p.PartitionType == gptPartitionTypeEfi {
-				if err = formatPartition(p, sfdiskPartition.Node); err != nil {
-					return PartitionError{err: err}
-				}
-				if err = mountPartition(p, sfdiskPartition.Node); err != nil {
-					return PartitionError{err: err}
-				}
-				break
-			}
+	// only pushes root partition to front since its the only partition that really needs to be mounted first
+	slices.SortFunc(systemPartitions, func(a, b CreatedPartition) int {
+		if a.Partition.PartitionType == gptPartitionTypeRoot && b.Partition.PartitionType != gptPartitionTypeRoot {
+			return -1
+		}
+		if a.Partition.PartitionType != gptPartitionTypeRoot && b.Partition.PartitionType == gptPartitionTypeRoot {
+			return 1
+		}
+		return 0
+	})
+
+	for _, p := range systemPartitions {
+		if err := mountPartition(p.Partition, p.SfdiskJsonPartition.Node); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func MountAdditionalPartitions(partitions []CreatedPartition) error {
+	var additionalPartitions []CreatedPartition
+	for _, p := range partitions {
+		if !p.Partition.isSystemPartition() {
+			additionalPartitions = append(additionalPartitions, p)
+		}
+	}
+	slices.SortFunc(additionalPartitions, func(a, b CreatedPartition) int {
+		if strings.HasPrefix(a.Partition.MountPoint, b.Partition.MountPoint) {
+			return 1
+		}
+		if strings.HasPrefix(b.Partition.MountPoint, a.Partition.MountPoint) {
+			return -1
+		}
+		return 0
+	})
+
+	for _, p := range additionalPartitions {
+		if err := mountPartition(p.Partition, p.SfdiskJsonPartition.Node); err != nil {
+			return err
 		}
 	}
 
@@ -95,54 +115,61 @@ func checkCompatibility(drives []Drive) error {
 //
 // Returns a mapping of the Partition and its corresponding SfdiskJsonPartition
 // to map the Partition object to the partition created on the system
-func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, error) {
+func createPartitions(drives []Drive) ([]CreatedPartition, error) {
 	partitioningFiles, err := createPartitioningFiles(drives)
 	if err != nil {
 		return nil, err
 	}
 
-	var mappings []map[Partition]SfdiskJsonPartition
+	var createdPartitions []CreatedPartition
 
 	for drive, fileName := range partitioningFiles {
-		sfdiskCommand := ""
 		var initialState *SfdiskJsonDrive
-
 		if drive.Append {
 			initialState, err = getDriveStateWithSfdisk(drive.Path)
 			if err != nil {
 				return nil, err
 			}
-			sfdiskCommand = fmt.Sprintf("sfdisk -a %s < %s", drive.Path, fileName)
-		} else {
-			sfdiskCommand = fmt.Sprintf("sfdisk %s < %s", drive.Path, fileName)
 		}
 
-		cmd := exec.Command("/bin/bash", "-c", sfdiskCommand)
-
-		if err := cmd.Run(); err != nil {
+		if err := createPartitionsFromFile(*drive, fileName); err != nil {
 			return nil, err
 		}
 
 		stateAfterCreatingPartitions, err := getDriveStateWithSfdisk(drive.Path)
-		var newPartitions []SfdiskJsonPartition
 		if err != nil {
 			return nil, err
 		}
+
+		var newPartitions []SfdiskJsonPartition
 		if initialState != nil {
 			newPartitions = stateAfterCreatingPartitions.PartitionTable.Partitions[len(initialState.PartitionTable.Partitions):]
 		} else {
 			newPartitions = stateAfterCreatingPartitions.PartitionTable.Partitions
 		}
 
-		partitionsMap := make(map[Partition]SfdiskJsonPartition)
 		for i := 0; i < len(newPartitions) || i < len(drive.Partitions); i++ {
-			partitionsMap[drive.Partitions[i]] = newPartitions[i]
+			createdPartitions = append(createdPartitions, CreatedPartition{Partition: drive.Partitions[i], SfdiskJsonPartition: newPartitions[i]})
 		}
-
-		mappings = append(mappings, partitionsMap)
 	}
 
-	return mappings, nil
+	return createdPartitions, nil
+}
+
+func createPartitionsFromFile(drive Drive, fileName string) error {
+	sfdiskCommand := ""
+	if drive.Append {
+		sfdiskCommand = fmt.Sprintf("sfdisk -a %s < %s", drive.Path, fileName)
+	} else {
+		sfdiskCommand = fmt.Sprintf("sfdisk %s < %s", drive.Path, fileName)
+	}
+
+	cmd := exec.Command("/bin/bash", "-c", sfdiskCommand)
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Creates one file per drive containing its partitions in sfdisk named-fields syntax
