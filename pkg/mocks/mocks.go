@@ -1,20 +1,22 @@
-package utils
+package mocks
 
 import (
 	"errors"
 	"os/exec"
+
+	"github.com/october-os/october-installer/pkg/utils"
 )
 
 // CommandExecutorGot slice of all the commands that called Run()
 var CommandExecutorGot []string
 
-// OutputMockReturn string to be returned by Output()
+// OutputReturn string to be returned by Output()
 // when called
-var OutputMockReturn string
+var OutputReturn string
 
-// ReturnMockError boolean to indicate if methods need
+// ReturnError boolean to indicate if methods need
 // to fail and return an error
-var ReturnMockError bool = false
+var ReturnError bool = false
 
 // CommandExecutorMock struct for mocking CommandExecutor in testing.
 // Implements ICommandExecutor.
@@ -27,7 +29,7 @@ type CommandExecutorMock struct {
 func (mock CommandExecutorMock) Run() error {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
 
-	if ReturnMockError {
+	if ReturnError {
 		return errors.New("mock error")
 	}
 	return nil
@@ -38,14 +40,14 @@ func (mock CommandExecutorMock) Run() error {
 func (mock CommandExecutorMock) Output() ([]byte, error) {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
 
-	if ReturnMockError {
+	if ReturnError {
 		return nil, errors.New("mock error")
 	}
-	return []byte(OutputMockReturn), nil
+	return []byte(OutputReturn), nil
 }
 
 // NewCommandExecutorMock creates a new mock.
-func NewCommandExecutorMock(command string, args ...string) ICommandExecutor {
+func NewCommandExecutorMock(command string, args ...string) utils.ICommandExecutor {
 	execCmd := exec.Command(command, args...)
 	return CommandExecutorMock{
 		Cmd: execCmd,

@@ -3,15 +3,16 @@ package keyring
 import (
 	"testing"
 
+	"github.com/october-os/october-installer/pkg/mocks"
 	"github.com/october-os/october-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUpdatingKeyring(t *testing.T) {
-	commandExecutor = utils.NewCommandExecutorMock
+	commandExecutor = mocks.NewCommandExecutorMock
 	defer func() {
 		commandExecutor = utils.NewCommandExecutor
-		utils.CommandExecutorGot = []string{}
+		mocks.CommandExecutorGot = []string{}
 	}()
 
 	expectedCommand := "/usr/bin/pacman -Sy --noconfirm archlinux-keyring"
@@ -19,16 +20,16 @@ func TestUpdatingKeyring(t *testing.T) {
 	err := UpdateKeyRing()
 
 	assert.NoError(t, err)
-	assert.Len(t, utils.CommandExecutorGot, 1, "No command ran during the test")
-	assert.Equal(t, expectedCommand, utils.CommandExecutorGot[0])
+	assert.Len(t, mocks.CommandExecutorGot, 1, "No command ran during the test")
+	assert.Equal(t, expectedCommand, mocks.CommandExecutorGot[0])
 }
 
 func TestUpdatingKeyringWithError(t *testing.T) {
-	commandExecutor = utils.NewCommandExecutorMock
-	utils.ReturnMockError = true
+	commandExecutor = mocks.NewCommandExecutorMock
+	mocks.ReturnError = true
 	defer func() {
 		commandExecutor = utils.NewCommandExecutor
-		utils.ReturnMockError = false
+		mocks.ReturnError = false
 	}()
 
 	err := UpdateKeyRing()

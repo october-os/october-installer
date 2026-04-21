@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/klauspost/cpuid/v2"
-	"github.com/october-os/october-installer/pkg/utils"
+	"github.com/october-os/october-installer/pkg/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,16 +15,16 @@ func TestInstallBasicInstallationValidCpu(t *testing.T) {
 	normalCommandExecutor := commandExecutor
 	defer func() {
 		commandExecutor = normalCommandExecutor
-		utils.CommandExecutorGot = []string{}
+		mocks.CommandExecutorGot = []string{}
 	}()
 
-	commandExecutor = utils.NewCommandExecutorMock
+	commandExecutor = mocks.NewCommandExecutorMock
 
 	err := InstallBasicInstallation()
 
 	assert.Nil(t, err, "Error should be nil with valid installation")
-	assert.Len(t, utils.CommandExecutorGot, 1)
-	assert.Equal(t, want, utils.CommandExecutorGot[0])
+	assert.Len(t, mocks.CommandExecutorGot, 1)
+	assert.Equal(t, want, mocks.CommandExecutorGot[0])
 }
 
 func TestInstallBasicInstallationInvalidCpu(t *testing.T) {
@@ -34,11 +34,11 @@ func TestInstallBasicInstallationInvalidCpu(t *testing.T) {
 		commandExecutor = normalCommandExecutor
 	}()
 
-	commandExecutor = utils.NewCommandExecutorMock
+	commandExecutor = mocks.NewCommandExecutorMock
 
 	err := InstallBasicInstallation()
 
 	assert.NotNil(t, err, "Error should be not nil with valid installation")
 	assert.ErrorAs(t, err, &CoreInstallError{}, "Error should be CoreInstallerError on error")
-	assert.Len(t, utils.CommandExecutorGot, 0)
+	assert.Len(t, mocks.CommandExecutorGot, 0)
 }
