@@ -26,6 +26,30 @@
           "fileSystem": "ext4"
         }
       ]
+    },
+    {
+      "path": "/dev/sdb",
+      "append": false,
+      "partitions": [
+        {
+          "size": {
+            "amount": 3,
+            "unit": "GiB"
+          },
+          "partitionType": "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
+          "fileSystem": "ext4",
+          "mountPoint": "/data"
+        },
+        {
+          "size": {
+            "amount": 5,
+            "unit": "GiB"
+          },
+          "partitionType": "933AC7E1-2EB4-4F13-B844-0E14E2AEF915",
+          "fileSystem": "btrfs",
+          "mountPoint": "/home/testuser"
+        }
+      ]
     }
   ],
   "users": [

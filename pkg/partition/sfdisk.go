@@ -2,8 +2,6 @@ package partition
 
 import (
 	"encoding/json"
-	"io"
-	"os/exec"
 )
 
 // SfdiskJsonDrive represents the JSON output from 'sfdisk --json <device>'
@@ -28,21 +26,8 @@ type SfdiskJsonPartition struct {
 //
 // Decodes the JSON state into a SfdiskJsonDrive object and returns it
 func getDriveStateWithSfdisk(drive string) (*SfdiskJsonDrive, error) {
-	cmd := exec.Command("sfdisk", "--json", drive)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-	var stdoutOutput []byte
-	if stdoutOutput, err = io.ReadAll(stdout); err != nil {
-		return nil, err
-	}
-	if err := cmd.Wait(); err != nil {
-		return nil, err
-	}
+	cmd := commandExecutor("sfdisk", "--json", drive)
+	stdoutOutput, err := cmd.Output()
 	var sjd SfdiskJsonDrive
 	if err = json.Unmarshal(stdoutOutput, &sjd); err != nil {
 		return nil, err

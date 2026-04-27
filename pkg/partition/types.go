@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 	"syscall"
+
+	"github.com/october-os/october-installer/pkg/utils"
 )
 
 const (
@@ -15,7 +17,7 @@ const (
 	fileSystemBtrfs string = "btrfs"
 )
 
-var supportedFileSystems []string = []string{
+var supportedFileSystems = []string{
 	fileSystemExt4,
 	fileSystemBtrfs,
 }
@@ -28,7 +30,7 @@ const (
 	gptPartitionTypeHome       string = "933AC7E1-2EB4-4F13-B844-0E14E2AEF915"
 )
 
-var supportedGptPartitionTypes []string = []string{
+var supportedGptPartitionTypes = []string{
 	gptPartitionTypeEfi,
 	gptPartitionTypeSwap,
 	gptPartitionTypeRoot,
@@ -47,7 +49,7 @@ const (
 	partitionSizeUnitYiB string = "YiB"
 )
 
-var supportedPartitionSizeUnits []string = []string{
+var supportedPartitionSizeUnits = []string{
 	partitionSizeUnitKiB,
 	partitionSizeUnitMiB,
 	partitionSizeUnitGiB,
@@ -67,7 +69,19 @@ type Drive struct {
 	Partitions []Partition `json:"partitions"`
 }
 
-// Validates the attributes of a Drive struct
+func (d *Drive) isCompatible() error {
+	cmd := commandExecutor("lsblk", d.Path, "-dno", "pttype")
+	stdoutOutput, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	if string(stdoutOutput) != "gpt\n" {
+		return fmt.Errorf("drive '%s' is not compatible: partition table must be GPT", d.Path)
+	}
+	return nil
+}
+
+// Validate validates the attributes of a Drive struct
 // Returns a PartitionError if validation fails
 func (d *Drive) Validate() error {
 	if !strings.HasPrefix(d.Path, "/dev/") {
@@ -95,66 +109,27 @@ type Partition struct {
 	MountPoint    string        `json:"mountPoint"`
 }
 
-// Transforms a partition into its sfdisk format
+// toSfdiskFormat transforms a partition into its sfdisk format
 // Returns a string
 //
 // Example:
 // "type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=1GiB"
 func (p *Partition) toSfdiskFormat() string {
-	partition_string := fmt.Sprintf("type=%s", p.PartitionType)
+	partitionString := fmt.Sprintf("type=%s", p.PartitionType)
 	if p.Size.TakeRemaining {
-		partition_string += ", size=+"
+		partitionString += ", size=+"
 	} else {
-		partition_string += fmt.Sprintf(", size=%d%s", p.Size.Amount, p.Size.Unit)
+		partitionString += fmt.Sprintf(", size=%d%s", p.Size.Amount, p.Size.Unit)
 	}
-	return partition_string
+	return partitionString
 }
 
+// isSystemPartition determines whether the partition is a system partition or not
 func (p *Partition) isSystemPartition() bool {
 	return p.PartitionType == gptPartitionTypeEfi || p.PartitionType == gptPartitionTypeSwap || p.PartitionType == gptPartitionTypeRoot
 }
 
-// Returns the command that can be used to format the partition
-func (p *Partition) formatCommand(path string) (*exec.Cmd, error) {
-	switch p.PartitionType {
-	case gptPartitionTypeEfi:
-		return exec.Command("mkfs.fat", "-F", "32", path), nil
-	case gptPartitionTypeSwap:
-		return exec.Command("mkswap", path), nil
-	case gptPartitionTypeRoot, gptPartitionTypeHome, gptPartitionTypeFileSystem:
-		switch p.FileSystem {
-		case fileSystemExt4:
-			return exec.Command("mkfs.ext4", path), nil
-		case fileSystemBtrfs:
-			return exec.Command("mkfs.btrfs", path), nil
-		}
-	}
-
-	return nil, errors.New("error choosing a formatting command: unsupported file system or partition type")
-}
-
-// Mounts the partition
-func (p *Partition) mount(path string) error {
-	switch p.PartitionType {
-	case gptPartitionTypeEfi:
-		if err := os.MkdirAll("/mnt/boot", 0755); err != nil {
-			return fmt.Errorf("mkdir /mnt/boot %s", err.Error())
-		}
-
-		return syscall.Mount(path, "/mnt/boot", "vfat", 0, "")
-	case gptPartitionTypeSwap:
-		cmd := exec.Command("swapon", path)
-		return cmd.Run()
-	case gptPartitionTypeRoot:
-		return syscall.Mount(path, "/mnt", p.FileSystem, 0, "")
-	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
-		return syscall.Mount(path, fmt.Sprintf("/mnt%s", p.MountPoint), p.FileSystem, 0, "")
-	}
-
-	return errors.New("error choosing a mounting command: unsupported partition type")
-}
-
-// Validates the attributes of a Partition struct
+// Validate validates the attributes of a Partition struct
 // Returns a PartitionError if validation fails
 func (p *Partition) Validate() error {
 	if p.MountPoint != "" {
@@ -207,7 +182,7 @@ type PartitionSize struct {
 	TakeRemaining bool   `json:"takeRemaining"`
 }
 
-// Validates the attributes of a PartitionSize struct
+// Validate validates the attributes of a PartitionSize struct
 // Returns a PartitionError if validation fails
 func (p *PartitionSize) Validate() error {
 	if p.TakeRemaining == false && (p.Amount == 0 || p.Unit == "") {
@@ -235,7 +210,64 @@ func (p *PartitionSize) Validate() error {
 	return nil
 }
 
+// CreatedPartition represents a Partition that has been created on the system.
+// Attributes:
+// Partition: the Partition that was created
+// SfdiskJsonPartition: the SfdiskJsonPartition that represents the createdPartition on the system
 type CreatedPartition struct {
 	Partition           Partition
 	SfdiskJsonPartition SfdiskJsonPartition
+}
+
+// format formats the partition
+func (p *CreatedPartition) format() error {
+	var cmd utils.ICommandExecutor
+
+	switch p.Partition.PartitionType {
+	case gptPartitionTypeEfi:
+		cmd = commandExecutor("mkfs.fat", "-F", "32", p.SfdiskJsonPartition.Node)
+	case gptPartitionTypeSwap:
+		cmd = commandExecutor("mkswap", p.SfdiskJsonPartition.Node)
+	case gptPartitionTypeRoot, gptPartitionTypeHome, gptPartitionTypeFileSystem:
+		switch p.Partition.FileSystem {
+		case fileSystemExt4:
+			cmd = commandExecutor("mkfs.ext4", "-F", p.SfdiskJsonPartition.Node)
+		case fileSystemBtrfs:
+			cmd = commandExecutor("mkfs.btrfs", "-f", p.SfdiskJsonPartition.Node)
+		}
+	}
+
+	if cmd == nil {
+		return errors.New("error choosing a formatting command: unsupported file system or partition type")
+	}
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// mount Mounts the partition
+func (p *CreatedPartition) mount() error {
+	switch p.Partition.PartitionType {
+	case gptPartitionTypeEfi:
+		if err := os.MkdirAll("/mnt/boot", 0755); err != nil {
+			return fmt.Errorf("mkdir /mnt/boot %s", err.Error())
+		}
+
+		return syscall.Mount(p.SfdiskJsonPartition.Node, "/mnt/boot", "vfat", 0, "")
+	case gptPartitionTypeSwap:
+		cmd := exec.Command("swapon", p.SfdiskJsonPartition.Node)
+		return cmd.Run()
+	case gptPartitionTypeRoot:
+		return syscall.Mount(p.SfdiskJsonPartition.Node, "/mnt", p.Partition.FileSystem, 0, "")
+	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
+		if err := os.MkdirAll(fmt.Sprintf("/mnt%s", p.Partition.MountPoint), 0755); err != nil {
+			return fmt.Errorf("mkdir %s %s", p.Partition.MountPoint, err.Error())
+		}
+		return syscall.Mount(p.SfdiskJsonPartition.Node, fmt.Sprintf("/mnt%s", p.Partition.MountPoint), p.Partition.FileSystem, 0, "")
+	}
+
+	return errors.New("error choosing a mounting syscall: unsupported partition type")
 }
