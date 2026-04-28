@@ -75,7 +75,27 @@ func setupConfigForUsers(users []user.User) error {
 // Sets up greetd with tuigreet using sed.
 func setupGreetd() error {
 	cmd := "sed -i 's/command = \"agreety --cmd \\/bin\\/sh\"/command = \"tuigreet --cmd start-hyprland\"/' /etc/greetd/config.toml"
-	return arch_chroot.Run(cmd)
+	if err := arch_chroot.Run(cmd); err != nil {
+		return err
+	}
+
+	cmd = `echo -e "#%PAM-1.0
+
+auth	required	pam_securetty.so
+auth	requisite	pam_nologin.so
+auth	include	system-local-login
+auth	optional	pam_gnome_keyring.so
+
+account	include	system-local-login
+session	include	system-local-login
+session	optional	pam_gnome_keyring.so auto_start
+" > /etc/pam.d/greetd`
+
+	if err := arch_chroot.Run(cmd); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Deletes /october-temp from newly installed system.
