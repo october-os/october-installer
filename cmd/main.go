@@ -77,7 +77,7 @@ func main() {
 	fmt.Println("October Linux installation done!")
 }
 
-// Takes the inputs from the -json and -json-file flags and returns the
+// getInstallConfiguration takes the inputs from the -json and -json-file flags and returns the
 // installation configuration after being parsed or an error.
 func getInstallConfiguration(json, jsonFile *string) (*json_parser.Installation, error) {
 	if *json == "" && *jsonFile == "" {
@@ -107,7 +107,7 @@ func getInstallConfiguration(json, jsonFile *string) (*json_parser.Installation,
 	return installationConfig, nil
 }
 
-// Creates all the given users and sets the
+// userCreation creates all the given users and sets the
 // root password.
 func userCreation(users *[]user.User, rootPassword string) {
 	for _, userToCreate := range *users {
@@ -125,7 +125,7 @@ func userCreation(users *[]user.User, rootPassword string) {
 	fmt.Println("Finished setting up root password.")
 }
 
-// Runs all the pre-installation steps like doing partitions
+// preInstallStep runs all the pre-installation steps like doing partitions
 // and setting up mirrors.
 func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 	fmt.Println("Updating keyring...")
@@ -134,6 +134,16 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 	}
 	fmt.Println("Keyring updated.")
 
+	setupPartitionsPreInstall(drives)
+
+	fmt.Println("Setting up mirror list...")
+	if err := mirrors.SetMirrorList(*mirrorCountries); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+	fmt.Println("Finished setting up mirror list.")
+}
+
+func setupPartitionsPreInstall(drives *[]partition.Drive) {
 	fmt.Println("Creating partitions...")
 	if err := partition.CreatePartitions(*drives); err != nil {
 		exitWithErrorCode(err, err.Error())
@@ -151,15 +161,9 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 		exitWithErrorCode(err, err.Error())
 	}
 	fmt.Println("System partitions mounted.")
-
-	fmt.Println("Setting up mirror list...")
-	if err := mirrors.SetMirrorList(*mirrorCountries); err != nil {
-		exitWithErrorCode(err, err.Error())
-	}
-	fmt.Println("Finished setting up mirror list.")
 }
 
-// Runs all the post install steps like installing
+// postInstallStep runs all the post install steps like installing
 // packages, GPU drivers etc.
 func postInstallStep(installGpuDrivers bool, users []user.User, extraPackages postinstall.ExtraPackages) {
 	fmt.Println("Enabling multilib repository...")
@@ -221,7 +225,7 @@ func postInstallStep(installGpuDrivers bool, users []user.User, extraPackages po
 	fmt.Println("Finished installing configuration for all users.")
 }
 
-// Runs the function to set the timezone
+// setTime runs the function to set the timezone
 // and sync the hardware clock
 func setTime(tmz string) {
 	if err := timezone.SetTime(tmz); err != nil {
@@ -233,7 +237,7 @@ func setTime(tmz string) {
 	}
 }
 
-// Exits the installer with the given exit code
+// exitWithErrorCode exits the installer with the given exit code
 // and prints the given message in STDERR.
 func exitWithErrorCode(e error, m string) {
 	exitCode := error_handler.GetExitCode(e)
