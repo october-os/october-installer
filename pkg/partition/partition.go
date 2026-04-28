@@ -174,10 +174,7 @@ func createPartitionsFromFile(drive Drive, fileName string) error {
 
 	cmd := commandExecutor("/bin/bash", "-c", sfdiskCommand)
 
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
+	return cmd.Run()
 }
 
 // createPartitioningFiles creates one file per drive containing its partitions in sfdisk named-fields syntax
