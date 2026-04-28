@@ -91,11 +91,7 @@ session	include	system-local-login
 session	optional	pam_gnome_keyring.so auto_start
 " > /etc/pam.d/greetd`
 
-	if err := arch_chroot.Run(cmd); err != nil {
-		return err
-	}
-
-	return nil
+	return arch_chroot.Run(cmd)
 }
 
 // Deletes /october-temp from newly installed system.
