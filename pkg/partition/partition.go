@@ -2,152 +2,183 @@ package partition
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
+	"slices"
 	"strings"
-	"syscall"
+
+	"github.com/october-os/october-installer/pkg/utils"
 )
 
-// Sets up the partitions for a list of Drive:
-// 1. Checks compatibility
-// 2. Creates the partitions
-// 3. Formats and mounts each partition
-//
-// Can return one type of error: PartitionError
-func SetupPartitions(drives []Drive) error {
-	cleanUpMounts()
+var partitions []CreatedPartition
+var commandExecutor = utils.NewCommandExecutor
 
+// CreatePartitions creates the partitions from a list of Drive
+// Can return one type of error: PartitionError
+func CreatePartitions(drives []Drive) error {
 	if err := checkCompatibility(drives); err != nil {
 		return PartitionError{err: err}
 	}
-	newPartitionsMappings, err := createPartitions(drives)
-	if err != nil {
+	if err := createPartitions(drives); err != nil {
 		return PartitionError{err: err}
 	}
+	return nil
+}
 
-	rootFound := false
-	efiFoundBeforeRoot := false
-	var efiPartition int
-	for i, mapping := range newPartitionsMappings {
-		for partition, sfdiskPartition := range mapping {
-			if partition.PartitionType == gptPartitionTypeEfi && !rootFound {
-				efiFoundBeforeRoot = true
-				efiPartition = i
-				continue
-			} else if partition.PartitionType == gptPartitionTypeRoot {
-				rootFound = true
-			}
+// FormatPartitions formats the partitions
+// Must be run after CreatePartitions
+// Can return one type of error: PartitionError
+func FormatPartitions() error {
+	if partitions == nil || len(partitions) == 0 {
+		return PartitionError{err: fmt.Errorf("no created partitions")}
+	}
 
-			if err = formatPartition(partition, sfdiskPartition.Node); err != nil {
-				return PartitionError{err: err}
-			}
-			if err = mountPartition(partition, sfdiskPartition.Node); err != nil {
-				return PartitionError{err: err}
-			}
+	for _, p := range partitions {
+		if err := p.format(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// MountSystemPartitions mounts the system partitions
+// Must be run after CreatePartitions
+// Can return one type of error: PartitionError
+func MountSystemPartitions() error {
+	if partitions == nil || len(partitions) == 0 {
+		return PartitionError{err: fmt.Errorf("no created partitions")}
+	}
+
+	var systemPartitions []CreatedPartition
+	for _, p := range partitions {
+		if p.Partition.isSystemPartition() {
+			systemPartitions = append(systemPartitions, p)
 		}
 	}
 
-	if efiFoundBeforeRoot {
-		for p, sfdiskPartition := range newPartitionsMappings[efiPartition] {
-			if p.PartitionType == gptPartitionTypeEfi {
-				if err = formatPartition(p, sfdiskPartition.Node); err != nil {
-					return PartitionError{err: err}
-				}
-				if err = mountPartition(p, sfdiskPartition.Node); err != nil {
-					return PartitionError{err: err}
-				}
-				break
-			}
+	// only pushes root partition to front since its the only partition that really needs to be mounted first
+	slices.SortFunc(systemPartitions, func(a, b CreatedPartition) int {
+		if a.Partition.PartitionType == gptPartitionTypeRoot && b.Partition.PartitionType != gptPartitionTypeRoot {
+			return -1
+		}
+		if a.Partition.PartitionType != gptPartitionTypeRoot && b.Partition.PartitionType == gptPartitionTypeRoot {
+			return 1
+		}
+		return 0
+	})
+
+	for _, p := range systemPartitions {
+		if err := p.mount(); err != nil {
+			return PartitionError{err: err}
 		}
 	}
 
 	return nil
 }
 
-// Checks the compatibility of a list of Drives
+// MountAdditionalPartitions mounts the additional partitions
+// Must be run after CreatePartitions
+// Can return one type of error: PartitionError
+func MountAdditionalPartitions() error {
+	if partitions == nil || len(partitions) == 0 {
+		return PartitionError{err: fmt.Errorf("no created partitions")}
+	}
+
+	var additionalPartitions []CreatedPartition
+	for _, p := range partitions {
+		if !p.Partition.isSystemPartition() {
+			additionalPartitions = append(additionalPartitions, p)
+		}
+	}
+	slices.SortFunc(additionalPartitions, func(a, b CreatedPartition) int {
+		if strings.HasPrefix(a.Partition.MountPoint, b.Partition.MountPoint) {
+			return 1
+		}
+		if strings.HasPrefix(b.Partition.MountPoint, a.Partition.MountPoint) {
+			return -1
+		}
+		return 0
+	})
+
+	for _, p := range additionalPartitions {
+		if err := p.mount(); err != nil {
+			return PartitionError{err: err}
+		}
+	}
+
+	return nil
+}
+
+// checkCompatibility Checks the compatibility of a list of Drive
 // A drive needs the GPT partition table to be compatible
 func checkCompatibility(drives []Drive) error {
 	for _, drive := range drives {
-		cmd := exec.Command("lsblk", drive.Path, "-dno", "pttype")
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
+		if err := drive.isCompatible(); err != nil {
 			return err
-		}
-		if err := cmd.Start(); err != nil {
-			return err
-		}
-		var stdoutOutput []byte
-		if stdoutOutput, err = io.ReadAll(stdout); err != nil {
-			return err
-		}
-		if err := cmd.Wait(); err != nil {
-			return err
-		}
-		if string(stdoutOutput) != "gpt\n" {
-			return fmt.Errorf("drive '%s' is not compatible: partition table must be GPT", drive.Path)
 		}
 	}
 	return nil
 }
 
-// Create Partitions from a list of Drives using sfdisk
-//
-// Returns a mapping of the Partition and its corresponding SfdiskJsonPartition
-// to map the Partition object to the partition created on the system
-func createPartitions(drives []Drive) ([]map[Partition]SfdiskJsonPartition, error) {
+// createPartitions create partitions from a list of Drive using sfdisk
+func createPartitions(drives []Drive) error {
 	partitioningFiles, err := createPartitioningFiles(drives)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var mappings []map[Partition]SfdiskJsonPartition
+	var createdPartitions []CreatedPartition
 
 	for drive, fileName := range partitioningFiles {
-		sfdiskCommand := ""
 		var initialState *SfdiskJsonDrive
-
 		if drive.Append {
 			initialState, err = getDriveStateWithSfdisk(drive.Path)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			sfdiskCommand = fmt.Sprintf("sfdisk -a %s < %s", drive.Path, fileName)
-		} else {
-			sfdiskCommand = fmt.Sprintf("sfdisk %s < %s", drive.Path, fileName)
 		}
 
-		cmd := exec.Command("/bin/bash", "-c", sfdiskCommand)
-
-		if err := cmd.Run(); err != nil {
-			return nil, err
+		if err := createPartitionsFromFile(*drive, fileName); err != nil {
+			return err
 		}
 
 		stateAfterCreatingPartitions, err := getDriveStateWithSfdisk(drive.Path)
-		var newPartitions []SfdiskJsonPartition
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		var newPartitions []SfdiskJsonPartition
 		if initialState != nil {
 			newPartitions = stateAfterCreatingPartitions.PartitionTable.Partitions[len(initialState.PartitionTable.Partitions):]
 		} else {
 			newPartitions = stateAfterCreatingPartitions.PartitionTable.Partitions
 		}
 
-		partitionsMap := make(map[Partition]SfdiskJsonPartition)
 		for i := 0; i < len(newPartitions) || i < len(drive.Partitions); i++ {
-			partitionsMap[drive.Partitions[i]] = newPartitions[i]
+			createdPartitions = append(createdPartitions, CreatedPartition{Partition: drive.Partitions[i], SfdiskJsonPartition: newPartitions[i]})
 		}
-
-		mappings = append(mappings, partitionsMap)
 	}
 
-	return mappings, nil
+	partitions = createdPartitions
+
+	return nil
 }
 
-// Creates one file per drive containing its partitions in sfdisk named-fields syntax
-// from a list of Drives
-//
+// createPartitionsFromFile creates partitions from a sfdisk named-fields syntax file with sfdisk
+func createPartitionsFromFile(drive Drive, fileName string) error {
+	sfdiskCommand := ""
+	if drive.Append {
+		sfdiskCommand = fmt.Sprintf("sfdisk -a %s < %s", drive.Path, fileName)
+	} else {
+		sfdiskCommand = fmt.Sprintf("sfdisk %s < %s", drive.Path, fileName)
+	}
+
+	cmd := commandExecutor("/bin/bash", "-c", sfdiskCommand)
+
+	return cmd.Run()
+}
+
+// createPartitioningFiles creates one file per drive containing its partitions in sfdisk named-fields syntax
+// from a list of Drive
 // Returns a map of the drives and their files name
 func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 	drivePartitionsFiles := make(map[*Drive]string)
@@ -170,33 +201,4 @@ func createPartitioningFiles(drives []Drive) (map[*Drive]string, error) {
 		}
 	}
 	return drivePartitionsFiles, nil
-}
-
-// Formats a partition
-func formatPartition(partition Partition, path string) error {
-	cmd, err := partition.formatCommand(path)
-	if err != nil {
-		return err
-	}
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Mounts a partition
-func mountPartition(partition Partition, path string) error {
-	err := partition.mount(path)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func cleanUpMounts() {
-	syscall.Unmount("/mnt/boot", syscall.MNT_DETACH)
-	syscall.Unmount("/mnt", syscall.MNT_DETACH)
 }
