@@ -143,6 +143,8 @@ func preInstallStep(drives *[]partition.Drive, mirrorCountries *[]string) {
 	fmt.Println("Finished setting up mirror list.")
 }
 
+// setupPartitionsPreInstall creates and formats all partitions and mounts the
+// system partitions needed for the core installation
 func setupPartitionsPreInstall(drives *[]partition.Drive) {
 	fmt.Println("Creating partitions...")
 	if err := partition.CreatePartitions(*drives); err != nil {
