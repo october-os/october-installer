@@ -29,7 +29,7 @@
     },
     {
       "path": "/dev/sdb",
-      "append": false,
+      "append": true,
       "partitions": [
         {
           "size": {
