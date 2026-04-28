@@ -68,7 +68,7 @@ func MountSystemPartitions() error {
 
 	for _, p := range systemPartitions {
 		if err := p.mount(); err != nil {
-			return err
+			return PartitionError{err: err}
 		}
 	}
 
@@ -101,7 +101,7 @@ func MountAdditionalPartitions() error {
 
 	for _, p := range additionalPartitions {
 		if err := p.mount(); err != nil {
-			return err
+			return PartitionError{err: err}
 		}
 	}
 
