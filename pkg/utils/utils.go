@@ -1,12 +1,16 @@
 package utils
 
-import "os/exec"
+import (
+	"io"
+	"os/exec"
+)
 
 // Interface for exec.Cmd.Run(). Makes
 // it mockable and testable.
 type ICommandExecutor interface {
 	Run() error
 	Output() ([]byte, error)
+	GetStdErrPipe() (io.ReadCloser, error)
 }
 
 // CommandExecutor struct that implements
@@ -25,6 +29,10 @@ func (c CommandExecutor) Run() error {
 // of an exec.Cmd.
 func (c CommandExecutor) Output() ([]byte, error) {
 	return c.Cmd.Output()
+}
+
+func (c CommandExecutor) GetStdErrPipe() (io.ReadCloser, error) {
+	return c.Cmd.StderrPipe()
 }
 
 // Creates a new CommandExecutor.
