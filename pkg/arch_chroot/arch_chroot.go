@@ -13,9 +13,10 @@ const mountPoint string = "/mnt"
 // shell is the shell that will be used to execute chroot commands
 const shell string = "/bin/bash"
 
+// CommandExecutor is the wrapper that executes the commands
 var CommandExecutor = utils.NewCommandExecutor
 
-// Executes the command in a shell using arch-chroot.
+// Run Executes the command in a shell using arch-chroot.
 //
 // It executes: arch-chroot [mount_point] [shell] -c [command]
 //

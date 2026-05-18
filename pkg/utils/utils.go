@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-// Interface for exec.Cmd.Run(). Makes
+// ICommandExecutor Interface for exec.Cmd.Run(). Makes
 // it mockable and testable.
 type ICommandExecutor interface {
 	Run() error
@@ -20,7 +20,7 @@ type CommandExecutor struct {
 	*exec.Cmd
 }
 
-// Run method that calls exec.Cmd.Run().
+// Run Method that calls exec.Cmd.Run().
 func (c CommandExecutor) Run() error {
 	return c.Cmd.Run()
 }
@@ -31,6 +31,7 @@ func (c CommandExecutor) Output() ([]byte, error) {
 	return c.Cmd.Output()
 }
 
+// GetStdErrPipe returns a pipe to stderr.
 func (c CommandExecutor) GetStdErrPipe() (io.ReadCloser, error) {
 	return c.Cmd.StderrPipe()
 }
