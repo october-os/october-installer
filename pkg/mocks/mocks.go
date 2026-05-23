@@ -48,7 +48,7 @@ func (mock CommandExecutorMock) Output() ([]byte, error) {
 }
 
 // GetStdErrPipe returns an stderr pipe to the cmd of the mock
-// object. This shouldn't be used outside of tests.
+// object.
 func (mock CommandExecutorMock) GetStdErrPipe() (io.ReadCloser, error) {
 	return mock.Cmd.StderrPipe()
 }
