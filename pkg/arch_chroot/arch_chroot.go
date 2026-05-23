@@ -2,8 +2,9 @@ package arch_chroot
 
 import (
 	"io"
-	"os/exec"
 	"strings"
+
+	"github.com/october-os/october-installer/pkg/utils"
 )
 
 // mountPoint is the mount point of the system to chroot into
@@ -12,7 +13,10 @@ const mountPoint string = "/mnt"
 // shell is the shell that will be used to execute chroot commands
 const shell string = "/bin/bash"
 
-// Executes the command in a shell using arch-chroot.
+// CommandExecutor is the wrapper that executes the commands
+var CommandExecutor = utils.NewCommandExecutor
+
+// Run Executes the command in a shell using arch-chroot.
 //
 // It executes: arch-chroot [mount_point] [shell] -c [command]
 //
@@ -28,8 +32,8 @@ func Run(commands ...string) error {
 		}
 	}
 
-	cmd := exec.Command("arch-chroot", mountPoint, shell, "-c", command.String())
-	stderr, err := cmd.StderrPipe()
+	cmd := CommandExecutor("arch-chroot", mountPoint, shell, "-c", command.String())
+	stderr, err := cmd.GetStdErrPipe()
 	if err != nil {
 		return ArchChrootError{err: err}
 	}

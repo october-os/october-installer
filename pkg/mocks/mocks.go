@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"errors"
+	"io"
 	"os/exec"
 
 	"github.com/october-os/october-installer/pkg/utils"
@@ -24,7 +25,7 @@ type CommandExecutorMock struct {
 	*exec.Cmd
 }
 
-// Run mock method that appends a new command to
+// Run is a mock method that appends a new command to
 // CommandExecutorGot.
 func (mock CommandExecutorMock) Run() error {
 	CommandExecutorGot = append(CommandExecutorGot, mock.String())
@@ -44,6 +45,12 @@ func (mock CommandExecutorMock) Output() ([]byte, error) {
 		return nil, errors.New("mock error")
 	}
 	return []byte(OutputReturn), nil
+}
+
+// GetStdErrPipe returns an stderr pipe to the cmd of the mock
+// object.
+func (mock CommandExecutorMock) GetStdErrPipe() (io.ReadCloser, error) {
+	return mock.Cmd.StderrPipe()
 }
 
 // NewCommandExecutorMock creates a new mock.
