@@ -8,7 +8,7 @@ import (
 )
 
 // Absolute path to the mirrorlist file.
-var mirrorlistFile string = "/etc/pacman.d/mirrorlist"
+var MirrorlistFile string = "/etc/pacman.d/mirrorlist"
 
 // mirrorMap Map of all the mirrors in the mirrorlist
 // file. Key is the country and the value is an array
@@ -64,7 +64,7 @@ func ValidateCountry(country string) error {
 // Saves all the servers of the given countries inside the
 // mirrorlist file.
 func saveMirrorlist(countries []string, mirrorMap map[string][]string) error {
-	file, err := os.Create(mirrorlistFile)
+	file, err := os.Create(MirrorlistFile)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func saveMirrorlist(countries []string, mirrorMap map[string][]string) error {
 
 // getMirrors reads the mirrorlist file and populate mirrorMap.
 func getMirrors() error {
-	file, err := os.Open(mirrorlistFile)
+	file, err := os.Open(MirrorlistFile)
 	if err != nil {
 		return err
 	}
