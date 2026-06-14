@@ -3,7 +3,6 @@ package timezone
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os/exec"
 	"slices"
 	"strings"
@@ -66,23 +65,10 @@ func ValidateTimezone(timezone string) error {
 //	timedatectl list-timezones
 func getAllTimezones() ([]string, error) {
 	cmd := exec.Command("timedatectl", "list-timezones")
-	stdout, err := cmd.StdoutPipe()
+	stdout, err := cmd.Output()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-
-	stdoutBytes, err := io.ReadAll(stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return nil, err
-	}
-
-	return strings.Split(string(stdoutBytes), "\n"), nil
+	return strings.Split(string(stdout), "\n"), nil
 }
