@@ -38,7 +38,7 @@ func TestSetTimeError(t *testing.T) {
 		mocks.ReturnError = false
 	}()
 
-	timezone := "invalid/tz"
+	timezone := "America/Laval"
 	err := SetTime(timezone)
 
 	assert.NotNil(t, err)
