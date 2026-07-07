@@ -42,9 +42,9 @@ func ValidateLocale(locale string) error {
 		return LocaleError{err: err}
 	}
 
-	if !bytes.Contains(content, []byte(fmt.Sprintf("#%s UTF-8", locale))) {
+	if !bytes.Contains(content, []byte(fmt.Sprintf("%s UTF-8", locale))) {
 		return LocaleError{
-			err: fmt.Errorf("%s is not a valid locale file", locale),
+			err: fmt.Errorf("%s is not a valid locale", locale),
 		}
 	}
 

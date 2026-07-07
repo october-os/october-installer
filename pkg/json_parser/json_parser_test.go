@@ -37,7 +37,7 @@ func TestValidJson(t *testing.T) {
 	assert.Len(t, installation.MirrorCountries, 1)
 	assert.Equal(t, "Canada", installation.MirrorCountries[0])
 	assert.Equal(t, "America/Montreal", installation.Timezone)
-	assert.Equal(t, "en_us.UTF-8", installation.Locale)
+	assert.Equal(t, "en_US.UTF-8", installation.Locale)
 	assert.Equal(t, "testhostname", installation.Hostname)
 	assert.Equal(t, "test", installation.RootPassword)
 	assert.False(t, installation.BestEffortGpu)
