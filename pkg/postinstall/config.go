@@ -62,7 +62,7 @@ func setupConfigForUsers(users []user.User) error {
 			return err
 		}
 
-		copyHyprPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/colors.conf %s/hypr/base", u.Username, octoberConfigDir, octoberConfigDir)
+		copyHyprPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/colors.lua %s/hypr/base", u.Username, octoberConfigDir, octoberConfigDir)
 		copyQuickshellPreRender := fmt.Sprintf("sudo -u %s cp %s/pre-rendered-templates/Theme.qml %s/quickshell/theme", u.Username, octoberConfigDir, octoberConfigDir)
 		if err := arch_chroot.Run(copyHyprPreRender, copyQuickshellPreRender); err != nil {
 			return err

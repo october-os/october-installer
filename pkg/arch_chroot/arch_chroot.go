@@ -2,8 +2,10 @@ package arch_chroot
 
 import (
 	"io"
+	"reflect"
 	"strings"
 
+	"github.com/october-os/october-installer/pkg/mocks"
 	"github.com/october-os/october-installer/pkg/utils"
 )
 
@@ -40,7 +42,11 @@ func Run(commands ...string) error {
 
 	err = cmd.Run()
 	if err != nil {
-		stdErrOutput, _ := io.ReadAll(stderr)
+		stdErrOutput := []byte("error")
+		if !isCurrentlyTesting() {
+			stdErrOutput, _ = io.ReadAll(stderr)
+		}
+
 		return ArchChrootError{
 			command: command.String(),
 			stdErr:  string(stdErrOutput),
@@ -49,4 +55,8 @@ func Run(commands ...string) error {
 	}
 
 	return nil
+}
+
+func isCurrentlyTesting() bool {
+	return reflect.TypeOf(CommandExecutor) == reflect.TypeOf(mocks.NewCommandExecutorMock)
 }
