@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/october-os/october-installer/pkg/hostname"
 	"github.com/october-os/october-installer/pkg/mirrors"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,6 +44,41 @@ func TestValidJson(t *testing.T) {
 	assert.False(t, installation.BestEffortGpu)
 	assert.Len(t, installation.ExtraPackages.OfficialRepositories, 2)
 	assert.Len(t, installation.ExtraPackages.AUR, 1)
+}
+
+func TestMalformedJson(t *testing.T) {
+	originalMirrorList := mirrors.MirrorlistFile
+	mirrors.MirrorlistFile = "../mirrors/testdata/mirrorlist"
+	defer func() {
+		mirrors.MirrorlistFile = originalMirrorList
+	}()
+
+	fileData, err := readJsonFile("malformed")
+	assert.Nil(t, err)
+
+	installation, err := ParseJson(string(fileData))
+	assert.NotNil(t, err)
+	assert.ErrorAs(t, err, &JsonParsingError{})
+
+	assert.Nil(t, installation)
+}
+
+func TestJsonWithEmptyHostname(t *testing.T) {
+	originalMirrorList := mirrors.MirrorlistFile
+	mirrors.MirrorlistFile = "../mirrors/testdata/mirrorlist"
+	defer func() {
+		mirrors.MirrorlistFile = originalMirrorList
+	}()
+
+	fileData, err := readJsonFile("emptyHostname")
+	assert.Nil(t, err)
+
+	installation, err := ParseJson(string(fileData))
+	assert.NotNil(t, err)
+	assert.ErrorAs(t, err, &JsonParsingError{})
+	assert.ErrorAs(t, err, &hostname.HostnameError{})
+
+	assert.Nil(t, installation)
 }
 
 func readJsonFile(name string) ([]byte, error) {
