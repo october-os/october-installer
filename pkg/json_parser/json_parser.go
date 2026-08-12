@@ -25,7 +25,7 @@ type Installation struct {
 	ExtraPackages   postinstall.ExtraPackages `json:"extraPackages"`
 }
 
-// Parses an installation JSON and validates it
+// ParseJson parses an installation JSON and validates it
 //
 // Can return errror types:
 // - JsonParsingError
