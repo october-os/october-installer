@@ -161,7 +161,10 @@ func (p *Partition) Validate() error {
 	}
 
 	if p.MountPoint == "" {
-		if p.PartitionType != gptPartitionTypeEfi && p.PartitionType != gptPartitionTypeSwap && p.PartitionType != gptPartitionTypeRoot {
+		if p.PartitionType != gptPartitionTypeEfi &&
+			p.PartitionType != gptPartitionTypeSwap &&
+			p.PartitionType != gptPartitionTypeRoot &&
+			p.PartitionType != gptPartitionTypeHome {
 			return PartitionError{
 				err: errors.New("Partition validation: error=MountPoint is not defined, but the partition type needs a mount point"),
 			}
@@ -262,7 +265,9 @@ func (p *CreatedPartition) mount() error {
 		return cmd.Run()
 	case gptPartitionTypeRoot:
 		return syscall.Mount(p.SfdiskJsonPartition.Node, "/mnt", p.Partition.FileSystem, 0, "")
-	case gptPartitionTypeHome, gptPartitionTypeFileSystem:
+	case gptPartitionTypeHome:
+		return syscall.Mount(p.SfdiskJsonPartition.Node, "/mnt/home", p.Partition.FileSystem, 0, "")
+	case gptPartitionTypeFileSystem:
 		if err := os.MkdirAll(fmt.Sprintf("/mnt%s", p.Partition.MountPoint), 0755); err != nil {
 			return fmt.Errorf("mkdir %s %s", p.Partition.MountPoint, err.Error())
 		}

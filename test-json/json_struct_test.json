@@ -20,6 +20,14 @@
         },
         {
           "size": {
+            "amount": 5,
+            "unit": "GiB"
+          },
+          "partitionType": "933AC7E1-2EB4-4F13-B844-0E14E2AEF915",
+          "filesystem": "ext4"
+        },
+        {
+          "size": {
             "takeRemaining": true
           },
           "partitionType": "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709",
