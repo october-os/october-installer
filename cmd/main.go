@@ -182,6 +182,14 @@ func postInstallStep(installGpuDrivers bool, users []user.User, extraPackages po
 		fmt.Println("GPU drivers installed.")
 	}
 
+	if len(extraPackages.OfficialRepositories) > 0 || len(extraPackages.AUR) > 0 {
+		fmt.Println("Adding user-defined extra packages...")
+		if err := postinstall.AddExtraPackages(extraPackages); err != nil {
+			exitWithErrorCode(err, err.Error())
+		}
+		fmt.Println("Extra packages added to install.")
+	}
+
 	fmt.Println("Installing packages from official repositories...")
 	if err := postinstall.InstallOfficialPackages(); err != nil {
 		exitWithErrorCode(err, err.Error())
@@ -193,14 +201,6 @@ func postInstallStep(installGpuDrivers bool, users []user.User, extraPackages po
 		exitWithErrorCode(err, err.Error())
 	}
 	fmt.Println("Finished installing AUR helper and packages.")
-
-	if len(extraPackages.OfficialRepositories) > 0 || len(extraPackages.AUR) > 0 {
-		fmt.Println("Installing user-defined extra packages...")
-		if err := postinstall.AddExtraPackages(extraPackages); err != nil {
-			exitWithErrorCode(err, err.Error())
-		}
-		fmt.Println("Extra packages installed.")
-	}
 
 	fmt.Println("Setting up branding...")
 	if err := postinstall.SetupBranding(); err != nil {
