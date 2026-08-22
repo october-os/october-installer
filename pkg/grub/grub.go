@@ -9,7 +9,7 @@ import (
 const espMountPoint string = "/boot"
 const bootloaderId string = "GRUB"
 
-// Installs and sets up Grub on the newly installed system.
+// InstallGrub installs and sets up Grub on the newly installed system.
 //
 // Does:
 //   - grub-Install
