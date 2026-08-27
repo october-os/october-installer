@@ -23,7 +23,7 @@ To use October installer, you can either give it a JSON file or string.
 
 To install from a file, use the `-json` flag:
 ```shell
-# october-installer -json [jsonfile]
+# october-installer -json [file path]
 ```
 
 To install from a string, use the `-json-raw` flag:
@@ -33,13 +33,15 @@ To install from a string, use the `-json-raw` flag:
 
 ## Development
 
-For development, the installer is using two modes that completes each other. This allows fast iterations safely.
+For development, the installer is using two modes that completes each other. This allows safe, fast iterations.
 
 ### TDD
 For normal development, we use test-driven development to allow fast testing and regression testing. 
 
 Running an installer at each new changes dramatically slows down testing, so we recommend creating and using tests during
-the core development of a feature or bug fixing. This command will run all tests:
+the core development of a feature or a bug fix. 
+
+This command will run all tests:
 ```bash
 go test ./...
 ```
