@@ -66,4 +66,6 @@ The shared file system should look like this in XML:
 To generate a new October Linux ISO for testing, you can check the instructions in [the ISO repository](https://github.com/october-os/october-iso).
 
 
-## Documentation
+## Configuration documentation
+
+All the documentation for the JSON configuration is in the `doc` directory or on [the October Linux website](https://octoberlinux.org/docs/).
