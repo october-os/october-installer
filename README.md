@@ -32,6 +32,38 @@ To install from a string, use the `-json-raw` flag:
 
 ## Development
 
+For development, the installer is using two modes that completes each other. This allows fast iterations safely.
+
+### TDD
+For normal development, we use test-driven development to allow fast testing and regression testing. 
+
+Running an installer at each new changes dramatically slows down testing, so we recommend creating and using tests during
+the core development of a feature or bug fixing. This command will run all tests:
+```bash
+go test ./...
+```
+
+### Virtual machine
+When you're done with developping, you **must** at least have one working run in a virtual machine.
+
+The directory `test-json` contains JSON configurations that are known to work and we encourage you to use them
+for testing.
+
+The setup we currently have is for QEMU. You need a valid QEMU virtual machine with two things:
+- Shared memory enabled
+- A `virtiofs` shared file system between the host machine and the VM.
+
+The shared file system should look like this in XML:
+```xml
+<filesystem type="mount" accessmode="passthrough">
+  <driver type="virtiofs"/>
+  <source dir="[host machine installer dir]"/>
+  <target dir="installer"/>
+  <address type="pci" domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+</filesystem>
+```
+
+To generate a new October Linux ISO for testing, you can check the instructions in [the ISO repository](https://github.com/october-os/october-iso).
 
 
 ## Documentation
