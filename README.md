@@ -9,13 +9,13 @@ Compiling the installer only requires the [Go compiler](https://go.dev/). When i
 ```bash
 git clone https://github.com/october-os/october-installer.git
 cd october-installer
-go build cmd/main.go -o october-installer
+go build -o october-installer cmd/main.go
 ```
 
 This produces a working installer called `october-installer` in the current directory.
 
 > [!CAUTION]
-> **Running this as super user will wipe your computer.**
+> **Running this as super user will wipe your current install.**
 >
 > Do not run the installer directly on your main machine for development. Use a virtual machine.
 
@@ -33,12 +33,12 @@ To install from a string, use the `-json-raw` flag:
 
 ## Development
 
-For development, the installer is using two modes that completes each other. This allows safe, fast iterations.
+For development, the installer is using two testing strategies that completement each other. This allows safe, fast iterations.
 
 ### TDD
 For normal development, we use test-driven development to allow fast testing and regression testing. 
 
-Running an installer at each new changes dramatically slows down testing, so we recommend creating and using tests during
+Running an installer at each new change dramatically slows down testing, so we recommend creating and using tests during
 the core development of a feature or a bug fix. 
 
 This command will run all tests:
@@ -47,7 +47,7 @@ go test ./...
 ```
 
 ### Virtual machine
-When you're done with developping, you **must** at least have one working run in a virtual machine.
+When you're done with developing, you **must** have at least have one working run in a virtual machine.
 
 The directory `test-json` contains JSON configurations that are known to work and we encourage you to use them
 for testing.
