@@ -14,11 +14,12 @@ go build cmd/main.go -o october-installer
 
 This produces a working installer called `october-installer` in the current directory.
 
-To use October installer, you can either give it a JSON file or string.
 > [!CAUTION]
 > **Running this as super user will wipe your computer.**
 >
 > Do not run the installer directly on your main machine for development. Use a virtual machine.
+
+To use October installer, you can either give it a JSON file or string.
 
 To install from a file, use the `-json` flag:
 ```shell
