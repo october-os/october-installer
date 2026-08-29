@@ -135,6 +135,8 @@ func SetupBranding() error {
 	return nil
 }
 
+// EnableSystemdServices retrieves all the services from the services
+// file and enables them.
 func EnableSystemdServices() error {
 	services, err := getSystemdServices()
 	if err != nil {

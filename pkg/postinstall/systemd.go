@@ -9,8 +9,11 @@ import (
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
+// systemdServicesFilePath absolute file path to services file.
 const systemdServicesFilePath string = "/root/postinstall/services"
 
+// getSystemdServices gets the names of all the services
+// from the services file.
 func getSystemdServices() ([]string, error) {
 	f, err := os.Open(systemdServicesFilePath)
 	if err != nil {
