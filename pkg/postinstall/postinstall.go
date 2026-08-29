@@ -134,3 +134,16 @@ func SetupBranding() error {
 
 	return nil
 }
+
+func EnableSystemdServices() error {
+	services, err := getSystemdServices()
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+
+	if err := systemdEnable(services); err != nil {
+		return PostInstallError{err: err}
+	}
+
+	return nil
+}
