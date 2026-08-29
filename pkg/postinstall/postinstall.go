@@ -23,10 +23,6 @@ func InstallOfficialPackages() error {
 		return PostInstallError{err: err}
 	}
 
-	if err := packageFlagParser(packages); err != nil {
-		return PostInstallError{err: err}
-	}
-
 	return nil
 }
 
@@ -75,10 +71,6 @@ func InstallAurHelperAndPackages() error {
 	}
 
 	if err := deleteBuilderAccount(); err != nil {
-		return PostInstallError{err: err}
-	}
-
-	if err := packageFlagParser(packages); err != nil {
 		return PostInstallError{err: err}
 	}
 

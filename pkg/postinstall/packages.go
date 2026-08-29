@@ -24,7 +24,7 @@ type ExtraPackages struct {
 	AUR                  []string `json:"aur"`
 }
 
-// Validate Validate the attributes of an ExtraPackages struct
+// Validate validates the attributes of an ExtraPackages struct
 // Returns a PostInstallError if validation fails
 func (e *ExtraPackages) Validate() error {
 	whiteSpaceError := PostInstallError{err: errors.New("Extra packages validation: error=white space detected in a package's name")}
