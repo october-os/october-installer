@@ -69,7 +69,7 @@ func downloadAllPackages(packages []pkg, fromAur bool) error {
 // list inside of it.
 //
 // List must have this form (flags can be omitted):
-//   - [package_name] [flag] [flag]
+//   - [package_name]
 func getPackageList(path string) ([]pkg, error) {
 	fd, err := os.Open(path)
 	if err != nil {
