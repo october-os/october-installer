@@ -44,7 +44,7 @@
     },
     {
       "username": "secondtestuser",
-      "password": "$test",
+      "password": "$test$test",
       "sudoer": false
     }
   ],

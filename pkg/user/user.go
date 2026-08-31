@@ -92,9 +92,7 @@ func userAdd(user *User) error {
 // setPassword sets the given user password for the given password inside
 // the newly installed system.
 func setPassword(username, password string) error {
-	if password[0] == '$' {
-		password = fmt.Sprintf("\\%s", password)
-	}
+	password = strings.ReplaceAll(password, "$", "\\$")
 
 	command := fmt.Sprintf("echo %s | passwd %s -s", password, username)
 	return arch_chroot.Run(command)
