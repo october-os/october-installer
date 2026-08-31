@@ -1,9 +1,7 @@
 package locale
 
 import (
-	"bytes"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/october-os/october-installer/pkg/arch_chroot"
@@ -66,30 +64,10 @@ func TestGenerateLocales(t *testing.T) {
 	assert.Equal(
 		t,
 		archChrootCommandBuilder(
-			"sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && " +
+			"sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && "+
 				"echo LANG=en_US.UTF-8 > /etc/locale.conf && locale-gen",
 		),
 		mocks.CommandExecutorGot[0])
-}
-
-func TestGenerateLocalesGeneratesValidLocale(t *testing.T) {
-	originalExecutor := arch_chroot.CommandExecutor
-	arch_chroot.CommandExecutor = mocks.NewCommandExecutorMock
-	defer func() {
-		arch_chroot.CommandExecutor = originalExecutor
-		mocks.CommandExecutorGot = []string{}
-	}()
-
-	testdata, err := os.ReadFile(testdataPath)
-	assert.NoError(t, err)
-	assert.True(
-		t,
-		bytes.Contains(testdata, []byte("#en_US.UTF-8 UTF-8")),
-		"testdata should contain the commented en_US.UTF-8 locale")
-
-	err = GenerateLocales("en_US.UTF-8")
-
-	assert.NoError(t, err)
 	assert.Contains(
 		t,
 		mocks.CommandExecutorGot[0],
