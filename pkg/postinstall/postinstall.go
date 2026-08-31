@@ -23,10 +23,6 @@ func InstallOfficialPackages() error {
 		return PostInstallError{err: err}
 	}
 
-	if err := packageFlagParser(packages); err != nil {
-		return PostInstallError{err: err}
-	}
-
 	return nil
 }
 
@@ -75,10 +71,6 @@ func InstallAurHelperAndPackages() error {
 	}
 
 	if err := deleteBuilderAccount(); err != nil {
-		return PostInstallError{err: err}
-	}
-
-	if err := packageFlagParser(packages); err != nil {
 		return PostInstallError{err: err}
 	}
 
@@ -137,6 +129,21 @@ func SetupBranding() error {
 		return PostInstallError{err: err}
 	}
 	if _, err := io.Copy(systemFile, isoFile); err != nil {
+		return PostInstallError{err: err}
+	}
+
+	return nil
+}
+
+// EnableSystemdServices retrieves all the services from the services
+// file and enables them.
+func EnableSystemdServices() error {
+	services, err := getSystemdServices()
+	if err != nil {
+		return PostInstallError{err: err}
+	}
+
+	if err := systemdEnable(services); err != nil {
 		return PostInstallError{err: err}
 	}
 

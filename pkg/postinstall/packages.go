@@ -10,11 +10,9 @@ import (
 	"github.com/october-os/october-installer/pkg/arch_chroot"
 )
 
-// pkg represents a package
-// with all its related flags.
+// pkg represents a package.
 type pkg struct {
-	name  string
-	flags []string
+	name string
 }
 
 // ExtraPackages represents the extra packages to be installed on the system.
@@ -26,7 +24,7 @@ type ExtraPackages struct {
 	AUR                  []string `json:"aur"`
 }
 
-// Validates the attributes of an ExtraPackages struct
+// Validate validates the attributes of an ExtraPackages struct
 // Returns a PostInstallError if validation fails
 func (e *ExtraPackages) Validate() error {
 	whiteSpaceError := PostInstallError{err: errors.New("Extra packages validation: error=white space detected in a package's name")}
@@ -71,7 +69,7 @@ func downloadAllPackages(packages []pkg, fromAur bool) error {
 // list inside of it.
 //
 // List must have this form (flags can be omitted):
-//   - [package_name] [flag] [flag]
+//   - [package_name]
 func getPackageList(path string) ([]pkg, error) {
 	fd, err := os.Open(path)
 	if err != nil {
@@ -87,71 +85,13 @@ func getPackageList(path string) ([]pkg, error) {
 
 		if len(line) != 0 && line[0] == '-' {
 			splittedLine := strings.Split(line, " ")
-			newPackage := pkg{
+			packageList = append(packageList, pkg{
 				name: splittedLine[1],
-			}
-
-			if len(splittedLine) > 2 {
-				var flags []string
-				for i := 2; i < len(splittedLine); i++ {
-					flags = append(flags, splittedLine[i])
-				}
-
-				newPackage.flags = flags
-			}
-			packageList = append(packageList, newPackage)
+			})
 		}
 	}
 
 	return packageList, nil
-}
-
-// Takes the package slice and parses the flags
-// for each packages, then acts accordingly for
-// the found flags.
-func packageFlagParser(packages []pkg) error {
-	var systemdEnablePkgs []string
-	var systemdUserEnablePkgs []string
-
-	for _, p := range packages {
-		if len(p.flags) == 0 {
-			continue
-		}
-
-		for _, f := range p.flags {
-			if strings.Contains(f, "SYSTEMD_ENABLE") {
-				systemdEnablePkgs = append(systemdEnablePkgs, getServiceName(p.name, f))
-			} else if strings.Contains(f, "SYSTEMD_USER_ENABLE") {
-				systemdUserEnablePkgs = append(systemdUserEnablePkgs, getServiceName(p.name, f))
-			}
-		}
-	}
-
-	if len(systemdEnablePkgs) > 0 {
-		if err := systemdEnable(systemdEnablePkgs); err != nil {
-			return err
-		}
-	}
-
-	if len(systemdUserEnablePkgs) > 0 {
-		if err := systemdUserEnable(systemdUserEnablePkgs); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Checks the flag and returns the real systemd
-// service name.
-func getServiceName(packageName, flag string) string {
-	if strings.Contains(flag, "=") {
-		splitString := strings.Split(flag, "=")
-
-		return splitString[1]
-	}
-
-	return packageName
 }
 
 // Adds the packages to a given file path in this format: "- package\n"

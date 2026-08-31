@@ -202,6 +202,12 @@ func postInstallStep(installGpuDrivers bool, users []user.User, extraPackages po
 	}
 	fmt.Println("Finished installing AUR helper and packages.")
 
+	fmt.Println("Activating systemd services...")
+	if err := postinstall.EnableSystemdServices(); err != nil {
+		exitWithErrorCode(err, err.Error())
+	}
+	fmt.Println("Systemd services activated.")
+
 	fmt.Println("Setting up branding...")
 	if err := postinstall.SetupBranding(); err != nil {
 		exitWithErrorCode(err, err.Error())
