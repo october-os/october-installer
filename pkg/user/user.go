@@ -89,9 +89,11 @@ func userAdd(user *User) error {
 	return arch_chroot.Run(createCommand)
 }
 
-// Sets the given user password for the given password inside
+// setPassword sets the given user password for the given password inside
 // the newly installed system.
 func setPassword(username, password string) error {
+	password = strings.ReplaceAll(password, "$", "\\$")
+
 	command := fmt.Sprintf("echo %s | passwd %s -s", password, username)
 	return arch_chroot.Run(command)
 }
