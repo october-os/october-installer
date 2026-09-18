@@ -41,6 +41,8 @@ func (u *User) Validate() error {
 // Errors that can be returned:
 //   - NewUserError
 func SetRootPassword(password string) error {
+	password = strings.ReplaceAll(password, "$", "\\$")
+
 	command := fmt.Sprintf("echo %s | passwd -s", password)
 	if err := arch_chroot.Run(command); err != nil {
 		return NewUserError{err: err}
